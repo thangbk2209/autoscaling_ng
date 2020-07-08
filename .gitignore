@@ -3,3 +3,4 @@ __pycache__/
 *.cfg
 *.DS_Store
 /Users/thangnguyen/hust_project/master_course/thesis_implementation/cloud_autoscaling/data/input_data/grid_data
+__init__.py

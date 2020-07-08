@@ -10,7 +10,7 @@ class Config:
     GOOGLE_TRACE_DATA_CONFIG = {
         'train_data_type': 'cpu_mem',  # cpu_mem, uni_mem, uni_cpu
         'predict_data': 'cpu',
-        'data_type': '1_job', # 1_job, all_jobs
+        'data_type': '1_job',  # 1_job, all_jobs
         'time_interval': 5,
         'file_data_name': '/input_data/google_trace/{}/{}_mins.csv',
         'data_path': CORE_DATA_DIR + '{}',
@@ -37,22 +37,22 @@ class Config:
             'traffic': 'eu'
         }
     }
+
     VISUALIZATION = True
-    MODEL_EXPERIMENT = 'lstm'  # lstm, ann, bnn
+    MODEL_EXPERIMENT = 'ann'  # lstm, ann, bnn
     METHOD_APPROACH = 'bp'  # pso, whale, bp, bp_pso, pso_bp
 
     LEARNING_RATE = 3e-4
-    EPOCHS = 1000
+    EPOCHS = 30
     EARLY_STOPPING = True
     PATIENCE = 20
-    TRAIN_SIZE = 0.6
+    TRAIN_SIZE = 0.8
     VALID_SIZE = 0.2
 
     if DATA_EXPERIMENT == 'google_trace':
-        INFO_PATH = 'results/{}/{}/{}/{}'.format(
-            MODEL_EXPERIMENT, METHOD_APPROACH, GOOGLE_TRACE_DATA_CONFIG['train_data_type'],
-            GOOGLE_TRACE_DATA_CONFIG['predict_data'])
-        MODEL_SAVE_PATH = CORE_DATA_DIR + '/{}/model/'.format(INFO_PATH)
+        INFO_PATH = 'results/{}/{}/{}'.format(
+            MODEL_EXPERIMENT, GOOGLE_TRACE_DATA_CONFIG['train_data_type'], GOOGLE_TRACE_DATA_CONFIG['predict_data'])
+        MODEL_SAVE_PATH = CORE_DATA_DIR + '/{}/model'.format(INFO_PATH)
         RESULTS_SAVE_PATH = CORE_DATA_DIR + '/{}/results/'.format(INFO_PATH)
         TRAIN_LOSS_PATH = CORE_DATA_DIR + '/{}/train_losses/'.format(INFO_PATH)
         EVALUATION_PATH = CORE_DATA_DIR + '/{}/evaluation.csv'.format(INFO_PATH)
@@ -77,8 +77,20 @@ class Config:
         'sliding': [3],
         'batch_size': [8],
         'num_units': [[4]],
-        'activation': ['sigmoid'],  # 'sigmoid', 'relu', 'tanh', 'elu'
-        'optimizers': ['momentum']  # 'momentum', 'adam', 'rmsprop'
+        'scalers': ['min_max_scaler'],
+        'activation': ['sigmoid', 'tanh', 'relu', 'elu'],  # 'sigmoid', 'relu', 'tanh', 'elu'
+        'optimizers': ['momentum', 'adam', 'rmsprop'],  # 'momentum', 'adam', 'rmsprop'
+        'domain': [
+            {'name': 'scaler', 'type': 'discrete', 'domain': [1]},
+            {'name': 'batch_size', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
+            {'name': 'sliding', 'type': 'discrete', 'domain': [1, 2, 3, 4, 5, 6, 7, 8]},
+            {'name': 'network_size', 'type': 'discrete', 'domain': [1, 2, 3, 4, 5]},
+            {'name': 'layer_size', 'type': 'discrete', 'domain': [2, 4, 8, 16, 32]},
+            {'name': 'dropout', 'type': 'continuous', 'domain': (0, 0.1)},
+            {'name': 'learning_rate', 'type': 'continuous', 'domain': (0.0001, 0.01)},
+            {'name': 'optimizer', 'type': 'discrete', 'domain': [1, 2, 3]},
+            {'name': 'activation', 'type': 'discrete', 'domain': [1, 2, 3, 4]}
+        ]
     }
 
     PSO_CONFIG = {

@@ -10,7 +10,7 @@ from sklearn.metrics import r2_score as r2
 
 from lib.evolution_algorithms.pso import *
 from lib.evolution_algorithms.woa import *
-from lib.scaler.preprocessing_data import DataPreprocessor
+from lib.scaler.preprocessing_data.data_preprocessor import DataPreprocessor
 from config import *
 
 matplotlib.use(Config.PLT_ENV)

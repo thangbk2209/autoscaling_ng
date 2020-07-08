@@ -27,56 +27,13 @@ class DataReader:
             disk_io_time = google_trace_df['disk_io_time'].values.reshape(-1, 1)
             disk_space = google_trace_df['disk_space'].values.reshape(-1, 1)
 
-            if Config.VISUALIZATION_CONFIG['options']:
-                official_data = {
-                    'cpu': cpu,
-                    'mem': mem,
-                    'disk_io_time': disk_io_time,
-                    'disk_space': disk_space
-                }
-                return official_data
-            if not os.path.isfile(self.normal_data_file):
-                # normalize data
-                disk_io_time_scaler = MinMaxScaler(feature_range=(0, 1))
-                disk_io_time_normal = disk_io_time_scaler.fit_transform(disk_io_time)
-
-                disk_space_scaler = MinMaxScaler(feature_range=(0, 1))
-                disk_space_normal = disk_space_scaler.fit_transform(disk_space)
-
-                mem_scaler = MinMaxScaler(feature_range=(0, 1))
-                mem_normal = mem_scaler.fit_transform(mem)
-
-                cpu_scaler = MinMaxScaler(feature_range=(0, 1))
-                cpu_normal = cpu_scaler.fit_transform(cpu)
-
-                normalized_data = {
-                    'cpu': cpu_normal,
-                    'mem': mem_normal,
-                    'disk_io_time': disk_io_time_normal,
-                    'disk_space': disk_space_normal
-                }
-
-                with open(self.normal_data_file, 'wb') as normal_data_file:
-                    pk.dump(cpu_scaler, normal_data_file, pk.HIGHEST_PROTOCOL)
-                    pk.dump(mem_scaler, normal_data_file, pk.HIGHEST_PROTOCOL)
-                    pk.dump(disk_io_time_scaler, normal_data_file, pk.HIGHEST_PROTOCOL)
-                    pk.dump(disk_space_scaler, normal_data_file, pk.HIGHEST_PROTOCOL)
-                    pk.dump(normalized_data, normal_data_file, pk.HIGHEST_PROTOCOL)
-            else:
-                with open(self.normal_data_file, 'rb') as normal_data_file:
-                    cpu_scaler = pk.load(normal_data_file)
-                    mem_scaler = pk.load(normal_data_file)
-                    disk_io_time_scaler = pk.load(normal_data_file)
-                    disk_space_scaler = pk.load(normal_data_file)
-                    normalized_data = pk.load(normal_data_file)
-
-            if Config.GOOGLE_TRACE_DATA_CONFIG['predict_data'] == 'cpu':
-                return normalized_data, cpu_scaler
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['predict_data'] == 'mem':
-                return normalized_data, mem_scaler
-            else:
-                print('>>> This prediction data is not served <<<')
-                return None, None
+            official_data = {
+                'cpu': cpu,
+                'mem': mem,
+                'disk_io_time': disk_io_time,
+                'disk_space': disk_space
+            }
+            return official_data
     
     def __read_grid(self):
         time_interval = self.grid_data_config['time_interval']
@@ -92,20 +49,16 @@ class DataReader:
         users_id = df['user_id_data'].values.reshape(-1, 1)
         groups_id = df['group_id_data'].values.reshape(-1, 1)
         n_processes = n_processes[384:]
-        n_processes_scaler = MinMaxScaler(feature_range=(0, 1))
-        n_processes_normal = n_processes_scaler.fit_transform(n_processes)
 
-        if Config.VISUALIZATION_CONFIG['options']:
-            official_data = {
-                'jobs_id': jobs_id,
-                'n_processes': n_processes,
-                'used_cpu_time': used_cpu_time,
-                'used_memory': used_memory,
-                'users_id': users_id,
-                'groups_id': groups_id
-            }
-            return official_data
-        return n_processes_normal, n_processes_scaler
+        official_data = {
+            'jobs_id': jobs_id,
+            'n_processes': n_processes,
+            'used_cpu_time': used_cpu_time,
+            'used_memory': used_memory,
+            'users_id': users_id,
+            'groups_id': groups_id
+        }
+        return official_data
     
     def __read_traffic(self):
         file_data_name = self.traffic_data_config['file_data_name']
@@ -115,27 +68,21 @@ class DataReader:
         df = read_csv(file_data_path, header=None, index_col=False, names=colnames, engine='python')
         traffic = df['megabyte'].values.reshape(-1, 1)
 
-        if Config.VISUALIZATION_CONFIG['options']:
-            official_data = {
-                'eu': traffic
-            }
-            return official_data
+        official_data = {
+            'eu': traffic
+        }
+        return official_data
 
-        traffic_scaler = MinMaxScaler(feature_range=(0, 1))
-        traffic_normal = traffic_scaler.fit_transform(traffic)
-
-        return traffic_normal, traffic_scaler
-
-    def read_data(self):
+    def read(self):
         if Config.DATA_EXPERIMENT == 'google_trace':
-            data, scaler = self.__read_google_trace()
-            return data, scaler
+            data = self.__read_google_trace()
+            return data
         elif Config.DATA_EXPERIMENT == 'grid':
-            data, scaler = self.__read_grid()
-            return data, scaler
+            data = self.__read_grid()
+            return data
         elif Config.DATA_EXPERIMENT == 'traffic':
-            data, scaler = self.__read_traffic()
-            return data, scaler
+            data = self.__read_traffic()
+            return data
         else:
             print('>>> We do not support to experiment with this data <<<')
             return None, None

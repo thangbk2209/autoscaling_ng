@@ -1,6 +1,8 @@
 
 import tensorflow as tf
 
+from lib.includes.utility import *
+
 
 class Net:
     def __init__(self, params, scope):
@@ -14,22 +16,22 @@ class Net:
 class MlpNet(Net):
     def __init__(self, params, scope):
         super().__init__(params, scope)
-        self.layer_size = params['layer_size']
+        self.num_units = params['num_units']
         self.activation = params['activation']
         self.dropout = params['dropout']
-        self.output_activation = params['output_activation']
-    
+
     def __call__(self, x, reuse=False, *args, **kwargs):
+
+        activation = get_activation(self.activation)
+
         with tf.variable_scope(self.scope) as scope:
-            if reuse:
-                scope.reuse_variables()
-            # if z is not None:
-            #     x = tf.concat([x, z], axis=1)
-            net = tf.keras.layers.Flatten()(x)
-            for i, units in enumerate(self.layer_size[:-1]):
-                net = tf.keras.layers.Dense(units, self.activation)(net)
-                net = tf.keras.layers.Dropout(self.dropout)(net)
-            net = tf.keras.layers.Dense(self.layer_size[-1], activation=self.output_activation)(net)
+            num_layers = len(self.num_units)
+            prev_layer = x
+            for i in range(num_layers):
+                prev_layer = tf.layers.dense(prev_layer, self.num_units[i], activation=activation, name='layer' + str(i))
+                prev_layer = tf.layers.dropout(prev_layer, rate=self.dropout)
+
+            net = tf.layers.dense(inputs=prev_layer, units=1, activation=activation, name='prediction')
         return net
 
 

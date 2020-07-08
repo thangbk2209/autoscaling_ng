@@ -21,9 +21,9 @@ import matplotlib.pyplot as plt
 
 def init_model():
     print('[1] >>> Start init model')
-    data_reader = DataReader()
-    normalized_data, scaler = data_reader.read_data()
-    model_trainer = ModelTrainer(normalized_data, scaler)
+    # data_reader = DataReader()
+    # normalized_data, scaler = data_reader.read_data()
+    model_trainer = ModelTrainer()
     model_trainer.train()
     print('[1] >>> Init model complete')
 

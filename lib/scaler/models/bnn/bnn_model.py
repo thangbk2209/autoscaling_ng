@@ -12,7 +12,7 @@ from tensorflow.contrib import rnn
 import time
 
 from config import *
-from lib.scaler.preprocessing_data import DataPreprocessor
+from lib.scaler.preprocessing_data.data_preprocessor import DataPreprocessor
 from lib.scaler.models.bnn.autoencoder import AutoEncoder
 from lib.evolution_algorithms.pso import *
 

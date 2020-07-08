@@ -1,0 +1,2 @@
+model_checkpoint_path: "/Users/thangnguyen/hust_project/master_course/thesis_implementation/cloud_autoscaling/data/results/ann/cpu_mem/cpu/model/input_shape_4-output_shape_1-batch_size_8-num_units_3-activation_tanh-optimizer_adam-dropout_0.1-learning_rate_0.0003"
+all_model_checkpoint_paths: "/Users/thangnguyen/hust_project/master_course/thesis_implementation/cloud_autoscaling/data/results/ann/cpu_mem/cpu/model/input_shape_4-output_shape_1-batch_size_8-num_units_3-activation_tanh-optimizer_adam-dropout_0.1-learning_rate_0.0003"

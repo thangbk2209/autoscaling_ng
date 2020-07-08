@@ -44,6 +44,10 @@ class ModelTrainer:
             x_train, y_train, x_test, y_test = \
                 data_preprocessor.init_data_ann(sliding, scaler_method)
             return x_train, y_train, x_test, y_test
+        elif Config.MODEL_EXPERIMENT.lower() == 'lstm':
+            x_train, y_train, x_test, y_test = \
+                data_preprocessor.init_data_lstm(sliding, scaler_method)
+            return x_train, y_train, x_test, y_test
         else:
             print('[ERROR] Not support this method')
 
@@ -84,30 +88,31 @@ class ModelTrainer:
             learning_rate=learning_rate
         )
 
-        model.fit(x_train, y_train, validation_split=0, batch_size=batch_size, epochs=Config.EPOCHS)
-        model.close_session()
-        return model.train_loss_arr[-1]
+        # model.fit(x_train, y_train, validation_split=0, batch_size=batch_size, epochs=Config.EPOCHS)
+        # model.close_session()
+        # model.save_model()
+        # return model.train_loss_arr[-1]
         # draw_train_loss(model.train_loss_arr, model.valid_loss_arr, train_loss_save_path)
-        # model.load_model()
-        # evaluation_value = model.evaluate(x_test, y_test)
-        # print(evaluation_value)
+        model.load_model()
+        evaluation_value = model.evaluate(x_test, y_test)
+        print(evaluation_value)
 
     def train_with_ann(self):
-        # item = {
-        #     'scaler_method': 'min_max_scaler',
-        #     'sliding': 2,
-        #     'batch_size': 8,
-        #     'num_unit': [3],
-        #     'activation': 'tanh',
-        #     'optimizer': 'adam',
-        #     'dropout': 0.1,
-        #     'learning_rate': 3e-4
-        # }
-        # self.fit_with_ann(item)
-        space = Space(self.fit_with_ann, Config.ANN_CONFIG['domain'])
-        max_iter = 10
-        early_stopping = False
-        pbest_particle = space.optimize(max_iter, early_stopping)
+        item = {
+            'scaler': 0,
+            'sliding': 2,
+            'batch_size': 8,
+            'num_unit': [3],
+            'activation': 0,
+            'optimizer': 0,
+            'dropout': 0.1,
+            'learning_rate': 3e-4
+        }
+        self.fit_with_ann(item)
+        # space = Space(self.fit_with_ann, Config.ANN_CONFIG['domain'])
+        # max_iter = 10
+        # early_stopping = False
+        # pbest_particle = space.optimize(max_iter, early_stopping)
         # queue = Queue()
         # for item in list(ParameterGrid(param_grid)):
         #     queue.put_nowait(item)
@@ -121,46 +126,58 @@ class ModelTrainer:
         # pool.terminate()
 
     def fit_with_lstm(self, item):
-        print('>>> start experiment with pool <<<')
+        # print('>>> start experiment LSTM model <<<')
+        # print('| ===> item:', item)
+        scaler_method = item['scaler']
         sliding = item["sliding"]
         batch_size = item["batch_size"]
-        num_units = item["num_unit"]
-        dropout_rate = item["dropout_rate"]
-        variation_dropout = self.lstm_config['variation_dropout']
+
+        num_units = [4, 2]
         activation = item["activation"]
         optimizer = item["optimizer"]
-        num_particle = item["num_particle"]
-        model = LstmPredictor(self.data, self.scaler, sliding=sliding, batch_size=batch_size, num_units=num_units,
-                              dropout_rate=dropout_rate, variation_dropout=variation_dropout, activation=activation,
-                              optimizer=optimizer, optimizer_approach=self.optimizer_approach,
-                              learning_rate=self.learning_rate, epochs=self.epochs, early_stopping=self.early_stopping,
-                              patience=self.patience, model_save_path=self.model_save_path,
-                              results_save_path=self.results_save_path, train_size=self.train_size,
-                              valid_size=self.valid_size, num_particle=num_particle,
-                              train_loss_path=self.train_loss_path, evaluation_path=self.evaluation_path)
-        model.fit()
+        dropout = item['dropout']
+        learning_rate = item["learning_rate"]
+        if type(scaler_method) == int and type(activation) == int and type(optimizer) == int:
+            scaler_method = Config.ANN_CONFIG['scalers'][scaler_method - 1]
+            activation = Config.ANN_CONFIG['activation'][activation - 1]
+            optimizer = Config.ANN_CONFIG['optimizers'][optimizer - 1]
+
+        x_train, y_train, x_test, y_test = self.preprocessing_data(sliding, scaler_method)
+        input_shape = [x_train.shape[1]]
+        output_shape = [y_train.shape[1]]
+        model_name = create_name(input_shape=input_shape, output_shape=output_shape, batch_size=batch_size,
+                                 num_units=num_units, activation=activation, optimizer=optimizer, dropout=dropout,
+                                 learning_rate=learning_rate)
+        model_path = f'{Config.MODEL_SAVE_PATH}/{model_name}'
+
+        model = AnnPredictor(
+            model_path=model_path,
+            input_shape=input_shape,
+            output_shape=output_shape,
+            batch_size=batch_size,
+            num_units=num_units,
+            activation=activation,
+            optimizer=optimizer,
+            dropout=dropout,
+            learning_rate=learning_rate
+        )
+
+        model.fit(x_train, y_train, validation_split=0, batch_size=batch_size, epochs=Config.EPOCHS)
+        model.close_session()
+        return model.train_loss_arr[-1]
 
     def train_with_lstm(self):
-        param_grid = {
-            'sliding': self.lstm_config['sliding'],
-            'batch_size': self.lstm_config['batch_size'],
-            'num_unit': self.lstm_config['num_units'],
-            'dropout_rate': self.lstm_config['dropout_rate'],
-            'activation': self.lstm_config['activation'],
-            'optimizer': self.lstm_config['optimizers'],
-            'num_particle': self.pso_config['num_particles']
+        item = {
+            'scaler': 'min_max_scaler',
+            'sliding': 2,
+            'batch_size': 8,
+            'num_unit': [3],
+            'activation': 'tanh',
+            'optimizer': 'adam',
+            'dropout': 0.1,
+            'learning_rate': 3e-4
         }
-        queue = Queue()
-        for item in list(ParameterGrid(param_grid)):
-            queue.put_nowait(item)
-        summary = open(self.evaluation_path, 'a+')
-        summary.write('Model, MAE, RMSE, r2\n')
-        print('>>> start experiment <<<')
-        pool = Pool(1)
-        pool.map(self.fit_with_lstm, list(queue.queue))
-        pool.close()
-        pool.join()
-        pool.terminate()
+        self.fit_with_lstm(item)
 
     def fit_with_bnn(self, item):
         print('>>> start experiment bnn with pool <<<')

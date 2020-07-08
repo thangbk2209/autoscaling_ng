@@ -39,7 +39,7 @@ class Config:
     }
 
     VISUALIZATION = True
-    MODEL_EXPERIMENT = 'ann'  # lstm, ann, bnn
+    MODEL_EXPERIMENT = 'lstm'  # lstm, ann, bnn
     METHOD_APPROACH = 'bp'  # pso, whale, bp, bp_pso, pso_bp
 
     LEARNING_RATE = 3e-4

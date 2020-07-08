@@ -38,12 +38,11 @@ class MlpNet(Net):
 class RnnNet(Net):
     def __init__(self, params, scope):
         super().__init__(params, scope)
-        self.layer_size = params['layer_size']
+        self.layer_size = params['num_units']
         self.activation = params['activation']
         self.dropout = params['dropout']
-        self.output_activation = params['output_activation']
         self.cell_type = self._get_cell(params['cell_type'])
-        self.concat_noise = None
+        # self.concat_noise = None
         # if 'concat_noise' in params:
         #     self.concat_noise = params['concat_noise']
 
@@ -66,8 +65,8 @@ class RnnNet(Net):
                 cell = self.cell_type(units, activation=self.activation, dropout=self.dropout)
                 cells.append(cell)
             net = tf.keras.layers.RNN(cells, return_sequences=False)(x)
-            if z is not None and self.concat_noise == 'after':
-                z = tf.keras.layers.Flatten()(z)
-                net = tf.concat([net, z], axis=1)
+            # if z is not None and self.concat_noise == 'after':
+            #     z = tf.keras.layers.Flatten()(z)
+            #     net = tf.concat([net, z], axis=1)
             net = tf.keras.layers.Dense(self.layer_size[-1], activation=self.output_activation)(net)
         return net

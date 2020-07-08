@@ -65,57 +65,34 @@ class DataPreprocessor:
             dataX.append(datai)
         return dataX
 
-    def init_data_lstm(self, sliding):
+    def init_data_lstm(self, sliding, scaler_method):
         print('>>> start init data for training LSTM model <<<')
 
-        if Config.DATA_EXPERIMENT == 'google_trace':
-            if Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'cpu_mem':
-                x_data = [self.data['cpu'], self.data['mem']]
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'uni_cpu':
-                x_data = [self.data['cpu']]
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'uni_mem':
-                x_data = [self.data['mem']]
+        data_normalizer = DataNormalizer(scaler_method)
+        x_timeseries, y_time_series, self.y_scaler = data_normalizer.normalize(self.x_data, self.y_data)
 
-            if Config.GOOGLE_TRACE_DATA_CONFIG['predict_data'] == 'cpu':
-                y_data = self.data['cpu']
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['predict_data'] == 'mem':
-                y_data = self.data['mem']
-        elif Config.DATA_EXPERIMENT == 'grid':
-            x_data = [self.data]
-            y_data = self.data
-        elif Config.DATA_EXPERIMENT == 'traffic':
-            x_data = [self.data]
-            y_data = self.data
-        else:
-            print("We do not support your data for preprocessing!")
-
-        x_timeseries = self.create_timeseries(x_data)
         num_points = x_timeseries.shape[0]
         train_point = int(self.train_size * num_points)
-        valid_point = int((self.train_size + self.valid_size) * num_points)
 
-        x_sampple = self.create_x(x_timeseries, sliding)
+        x_sample = self.create_x(x_timeseries, sliding)
 
-        x_train = x_sampple[0:train_point - sliding]
+        x_train = x_sample[0:train_point - sliding]
         x_train = np.array(x_train)
 
-        x_valid = x_sampple[train_point - sliding: valid_point - sliding]
-        x_valid = np.array(x_valid)
-
-        x_test = x_sampple[valid_point - sliding:]
+        x_test = x_sample[train_point - sliding:]
         x_test = np.array(x_test)
 
-        y_train = y_data[sliding: train_point]
+        y_train = y_time_series[sliding: train_point]
         y_train = np.array(y_train)
 
-        y_valid = y_data[train_point: valid_point]
-        y_valid = np.array(y_valid)
-
-        y_test = y_data[valid_point:]
+        y_test = self.y_data[train_point:]
         y_test = np.array(y_test)
 
-        print('>>> Init data for training LSTM model done <<<')
-        return x_train, y_train, x_valid, y_valid, x_test, y_test
+        print(x_train.shape, x_test.shape)
+        print(y_train.shape, y_test.shape)
+        print('>>> Init data for training model complete <<<')
+
+        return x_train, y_train, x_test, y_test
 
     def init_data_ann(self, sliding, scaler_method):
         # print('>>> start init data for training ANN model <<<')

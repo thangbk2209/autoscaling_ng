@@ -35,8 +35,8 @@ class BaseModel:
 
         # model_graph_dir = self.model_path
         metadata = '{}.meta'.format(self.model_path)
-        model_graph_dir = '/Users/thangnguyen/hust_project/master_course/thesis_implementation/cloud_autoscaling/data/results/ann/cpu_mem/cpu/model'
-        # model_graph_dir = model_graph_dir.rsplit(os.sep, 1)[0]
+        # model_graph_dir = '/Users/thangnguyen/hust_project/master_course/thesis_implementation/cloud_autoscaling/data/results/ann/cpu_mem/cpu/model'
+        model_graph_dir = self.model_path.rsplit(os.sep, 1)[0]
         print('=====')
         print(metadata, model_graph_dir)
 
@@ -55,7 +55,7 @@ class BaseModel:
             for v in self.graph.as_graph_def().node:
                 f.write(v.name + '\n')
             self._x = self.graph.get_tensor_by_name('x:0')
-            self._pred = self.graph.get_tensor_by_name('mlp_net/prediction/Tanh:0')
+            self._pred = self.graph.get_tensor_by_name('mlp_net/prediction/Elu:0')
 
     def save_model(self):
         self.saver.save(self.sess, self.model_path)
@@ -112,8 +112,8 @@ class BaseModel:
                     result_eval = self.evaluate(x_valid, y_valid)
                     validation_state = ', validation - {}'.format(result_eval['mse'])
                     self.valid_loss_arr.append(result_eval['mse'])
-                # print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
-                # print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
+                print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
+                print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
 
             if early_stopping:
                 if epoch > patience:

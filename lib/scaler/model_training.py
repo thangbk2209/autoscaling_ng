@@ -9,7 +9,7 @@ from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn import datasets
 from sklearn.metrics import mean_squared_error
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use(Config.PLT_ENV)
 import matplotlib.pyplot as plt
 
 from config import *

@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 
 def init_model():
     print('[1] >>> Start init model')
+    print(f'=== model information: {Config.RESULTS_SAVE_PATH}')
     model_trainer = ModelTrainer()
     model_trainer.train()
     print('[1] >>> Init model complete')

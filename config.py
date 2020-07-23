@@ -57,7 +57,7 @@ class Config:
 
     if DATA_EXPERIMENT == 'google_trace':
         INFO_SAVED_PATH = 'results/google_trace/{}/{}/{}/{}'.format(
-            MODEL_EXPERIMENT, GOOGLE_TRACE_DATA_CONFIG['data_type'], GOOGLE_TRACE_DATA_CONFIG['train_data_type'],
+            GOOGLE_TRACE_DATA_CONFIG['data_type'], MODEL_EXPERIMENT, GOOGLE_TRACE_DATA_CONFIG['train_data_type'],
             GOOGLE_TRACE_DATA_CONFIG['predict_data'])
         RESULTS_SAVE_PATH = CORE_DATA_DIR + '/{}/{}/{}/'.format(INFO_SAVED_PATH, METAHEURISTIC_METHOD, FITNESS_TYPE)
     else:

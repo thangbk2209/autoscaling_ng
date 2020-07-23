@@ -29,16 +29,18 @@ class LstmPredictor(RegressionModel):
         activation=None,
         optimizer=None,
         dropout=None,
+        cell_type=None,
         learning_rate=None
     ):
 
         params = {
             'num_units': num_units,
             'activation': activation,
-            'dropout': dropout
+            'dropout': dropout,
+            'cell_type': cell_type
         }
 
-        net = RnnNet(params, 'rnn_net')
+        net = RnnNet(params, 'rnn_net', mode='predictor')
         optimizer = get_optimizer(optimizer, learning_rate)
 
         super().__init__(net, input_shape, output_shape, optimizer, model_path)

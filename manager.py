@@ -2,7 +2,7 @@ import os
 import sys
 from subprocess import Popen, PIPE
 import time
-import pickle as pk
+import pickle as pkl
 
 import tensorflow as tf
 import numpy as np
@@ -18,17 +18,28 @@ from lib.scaler.model_training import ModelTrainer
 from lib.data_visualization.read_grid_data import *
 from lib.data_visualization.visualize import *
 from lib.preprocess.read_data import DataReader
+from lib.scaler.preprocessing_data.data_preprocessor import DataPreprocessor
+from lib.evaluation.error_metrics import *
+from lib.evaluation.model_evaluator import ModelEvaluator
 matplotlib.use(Config.PLT_ENV)
 import matplotlib.pyplot as plt
 
 
 def init_model():
     print('[1] >>> Start init model')
-    # data_reader = DataReader()
-    # normalized_data, scaler = data_reader.read_data()
     model_trainer = ModelTrainer()
     model_trainer.train()
     print('[1] >>> Init model complete')
+
+
+def evaluate_model():
+    try:
+        iteration = sys.argv[2]
+    except Exception as ex:
+        print('[ERROR] Can not define your iteration')
+
+    model_evaluator = ModelEvaluator()
+    model_evaluator.evaluate_bnn(iteration, visualize_option=True)
 
 
 def download():
@@ -58,5 +69,11 @@ def download():
 
 
 if __name__ == "__main__":
-    # init_model()
-    download()
+    if sys.argv[1] == 'training':
+        init_model()
+    elif sys.argv[1] == 'evaluate':
+        evaluate_model()
+    else:
+        print(f'[ERROR] Not support: {sys.argv[1]}')
+    # download()
+    # evaluate_model()

@@ -177,14 +177,15 @@ class Space:
             self.w_old_velocation = (max_iter - iteration) / max_iter \
                 * (self.max_w_old_velocation - self.min_w_old_velocation) + self.min_w_old_velocation
             start_time = time.time()
+            print(f'iteration: {iteration + 1}')
 
             self.set_gbest()
 
             self.move_particles()
 
             optimize_loss.append(self.gbest_value)
-            training_history = 'iteration: %d fitness = %.8f with time for running: %.2f '\
-                % (iteration + 1, self.gbest_value, time.time() - start_time)
+            training_history = 'fitness = %.8f with time for running: %.2f '\
+                % (self.gbest_value, time.time() - start_time)
             print(training_history)
 
             model_name = self.gbest_model.model_path.split('/')[-1]

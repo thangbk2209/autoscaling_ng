@@ -9,8 +9,6 @@ from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn import datasets
 from sklearn.metrics import mean_squared_error
 import matplotlib
-matplotlib.use(Config.PLT_ENV)
-import matplotlib.pyplot as plt
 
 from config import *
 from lib.preprocess.read_data import DataReader
@@ -25,6 +23,9 @@ from lib.includes.utility import *
 from lib.evolution_algorithms.pso import Space
 from lib.evaluation.fitness_manager import FitnessManager
 from lib.scaler.model_loader import ModelLoader
+
+matplotlib.use(Config.PLT_ENV)
+import matplotlib.pyplot as plt
 
 
 class ModelTrainer:

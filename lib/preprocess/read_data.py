@@ -41,7 +41,7 @@ class DataReader:
                 'disk_space': disk_space
             }
             return official_data
-    
+
     def __read_grid(self):
         time_interval = self.grid_data_config['time_interval']
         file_data_name = self.grid_data_config['file_data_name'].format(time_interval / 60)

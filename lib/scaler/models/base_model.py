@@ -114,8 +114,8 @@ class BaseModel:
                     result_eval = self.evaluate(x_valid, y_valid)
                     validation_state = ', validation - {}'.format(result_eval['mse'])
                     self.valid_loss_arr.append(result_eval['mse'])
-                print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
-                print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
+                # print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
+                # print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
 
             if early_stopping:
                 if epoch > patience:
@@ -239,11 +239,11 @@ class UnsupervisedPretrainModel(BaseModel):
                     result_eval = self.evaluate(x_valid, y_valid)
                     validation_state = ', validation - {}'.format(result_eval['mse'])
                     self.valid_loss_arr.append(result_eval['mse'])
-                # print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
-                # print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
+                print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
+                print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
 
             if early_stopping:
                 if epoch > patience:
-                    if not early_stopping(train_loss_arr, self.patience):
+                    if not early_stopping_decision(self.train_loss_arr, self.patience):
                         print('|>>> Early stopping training ...')
                         break

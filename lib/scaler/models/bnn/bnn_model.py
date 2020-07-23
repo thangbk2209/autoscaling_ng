@@ -13,286 +13,181 @@ import time
 
 from config import *
 from lib.scaler.preprocessing_data.data_preprocessor import DataPreprocessor
-from lib.scaler.models.bnn.autoencoder import AutoEncoder
 from lib.evolution_algorithms.pso import *
-
+from lib.scaler.nets.base_net import MlpNet
+from lib.scaler.models.base_model import RegressionModel, BaseModel
+from lib.evaluation.error_metrics import evaluate
 
 matplotlib.use(Config.PLT_ENV)
 import matplotlib.pyplot as plt
 
 
-class BnnPredictor:
-    def __init__(self, data=None, scaler=None, train_size=None, valid_size=None, sliding_encoder=None,
-                 sliding_inference=None, batch_size=None, num_units_lstm=None, num_units_inference=None,
-                 dropout_rate=None, variation_dropout=False, activation=None, optimizer=None, variant=None,
-                 optimizer_approach=None, learning_rate=None, epochs=None, patience=None, num_particle=None):
-        self.data = data
-        self.scaler = scaler
-        self.train_size = train_size
-        self.valid_size = valid_size
-        self.sliding_encoder = sliding_encoder
-        self.sliding_inference = sliding_inference
-        self.batch_size = batch_size
-        self.num_units_lstm = num_units_lstm
-        self.num_units_inference = num_units_inference
-        self.dropout_rate = dropout_rate
-        self.variation_dropout = variation_dropout
-        self.optimizer_approach = optimizer_approach
-        self.learning_rate = learning_rate
-        self.epochs = epochs
-        self.patience = patience
-        self.num_particle = num_particle
+class BnnPredictor(BaseModel):
+    def __init__(
+        self,
+        model_path=None,
+        pretrained_encoder_net=None,
+        encoder_input_shape=None,
+        inf_input_shape=None,
+        output_shape=None,
+        batch_size=None,
+        num_units=None,
+        activation=None,
+        optimizer=None,
+        dropout=None,
+        cell_type=None,
+        learning_rate=None,
+        initial_state=True
+    ):
 
-        self.variant = variant
+        self.num_units = num_units
         self.activation = activation
-        if self.activation == 'sigmoid':
-            self.activation_func = tf.nn.sigmoid
-        elif self.activation == 'relu':
-            self.activation_func = tf.nn.relu
-        elif self.activation == 'tanh':
-            self.activation_func = tf.nn.tanh
-        elif self.activation == 'elu':
-            self.activation_func = tf.nn.elu
-        else:
-            print(">>> Can not apply your activation <<<")
-
+        self.dropout = dropout
+        self.cell_type = cell_type
+        self.pretrained_encoder_net = pretrained_encoder_net
         self.optimizer = optimizer
-        if self.optimizer == 'momentum':
-            self.optimizer_method = tf.train.MomentumOptimizer(learning_rate=self.learning_rate, momentum=0.9)
-        elif self.optimizer == 'adam':
-            self.optimizer_method = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        elif self.optimizer == 'rmsprop':
-            self.optimizer_method = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate)
-        else:
-            print(">>> Can not apply your optimizer <<<")
-        self.create_name()
-        if Config.DATA_EXPERIMENT == 'google_trace':
-            self.x_data_name = Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type']
-            self.y_data_name = Config.GOOGLE_TRACE_DATA_CONFIG['predict_data']
+        self.learning_rate = learning_rate
 
-        self.evaluation_path = Config.EVALUATION_PATH.format(
-            'bnn/inference', self.optimizer_approach, self.x_data_name, self.y_data_name)
-        self.model_saved_path = Config.MODEL_SAVE_PATH.format(
-            'bnn/inference', self.optimizer_approach, self.x_data_name, self.y_data_name) + self.file_name + '/model'
+        self.encoder_input_shape = encoder_input_shape
+        self.inf_input_shape = inf_input_shape
+        self.output_shape = output_shape
+        self.cell_type = cell_type
+        self.batch_size = batch_size
+        self.epochs = Config.EPOCHS
+        self.early_stopping = Config.EARLY_STOPPING
+        self.patience = Config.PATIENCE
 
-        self.train_loss_path = Config.TRAIN_LOSS_PATH.format(
-            'bnn/inference', self.optimizer_approach, self.x_data_name, self.y_data_name) + self.file_name + '.png'
+        super().__init__(model_path, initial_state)
 
-        self.results_save_path = Config.RESULTS_SAVE_PATH.format(
-            'bnn/inference', self.optimizer_approach, self.x_data_name, self.y_data_name) + self.file_name + '.csv'
+    def initiate_state(self):
+        params = {
+            'num_units': self.num_units,
+            'activation': self.activation,
+            'dropout': self.dropout,
+            'cell_type': self.cell_type
+        }
 
-    def create_name(self):
-        def create_name_network(num_units):
-            name = ''
-            for i in range(len(num_units)):
-                if (i == len(num_units) - 1):
-                    name += str(num_units[i])
-                else:
-                    name += str(num_units[i]) + '_'
-            return name
+        self.encoder_net = self.pretrained_encoder_net
+        self.inf_net = MlpNet(params, 'inf_net')
 
-        name_lstm = create_name_network(self.num_units_lstm)
-        name_inference = create_name_network(self.num_units_inference)
+        self.optimizer = get_optimizer(self.optimizer, self.learning_rate)
 
-        part1 = 'sli_encoder-{}_batch-{}_name_lstm-{}'.format(self.sliding_encoder, self.batch_size, name_lstm)
-        part2 = 'activation-{}_optimizer_{}'.format(self.activation, self.optimizer)
-        part4 = '_num_par-{}'.format(self.num_particle)
-        part5 = '_name_inf-{}_sliding_inf-{}'.format(name_inference, self.sliding_inference)
-        if self.variation_dropout:
-            part3 = '_dropout_rate-{}'.format(self.dropout_rate)
-        else:
-            part3 = ''
-
-        self.file_name = part1 + part2 + part3 + part4 + part5
-        self.encoder_file_name = part1 + part2 + part3 + part4
-
-    def preprocessing_data(self):
-        data_preprocessor = DataPreprocessor(self.data, self.train_size, self.valid_size)
-        self.x_train_inference, self.y_train_inference, self.x_valid_inference, self.y_valid_inference, \
-            self.x_test_inference, self.y_test_inference = data_preprocessor.init_data_inference(self.sliding_encoder,
-                                                                                                 self.sliding_inference)
-
-        print('>>> Init auto encoder model <<<')
-        autoencoder = AutoEncoder(data=self.data, scaler=self.scaler, train_size=self.train_size,
-                                  valid_size=self.valid_size, sliding_encoder=self.sliding_encoder,
-                                  batch_size=self.batch_size, num_units_lstm=self.num_units_lstm,
-                                  dropout_rate=self.dropout_rate, variation_dropout=self.variation_dropout,
-                                  activation=self.activation, optimizer=self.optimizer, variant=self.variant,
-                                  optimizer_approach=self.optimizer_approach, learning_rate=self.learning_rate,
-                                  epochs=self.epochs, patience=self.patience, num_particle=self.num_particle)
-        print('>>> Compute hidden state <<<')
-        self.state_train, self.state_valid, self.state_test = autoencoder.compute_state_vector()
-
-        self.x_train_inference = np.concatenate((self.x_train_inference, self.state_train), axis=1)
-        self.x_valid_inference = np.concatenate((self.x_valid_inference, self.state_valid), axis=1)
-        self.x_test_inference = np.concatenate((self.x_test_inference, self.state_test), axis=1)
-
-    def draw_train_loss(self, cost_train_set, cost_valid_set):
-        plt.plot(cost_train_set)
-        plt.plot(cost_valid_set)
-
-        plt.title('model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'validation'], loc='upper left')
-        plt.savefig(self.train_loss_path)
-        plt.close()
-
-    def mlp(self, input, num_units, activation):
-        num_layers = len(num_units)
-        prev_layer = input
-        for i in range(num_layers):
-            prev_layer = tf.layers.dense(prev_layer, num_units[i], activation=activation, name='layer' + str(i))
-            drop_rate = self.dropout_rate
-            prev_layer = tf.layers.dropout(prev_layer, rate=drop_rate)
-
-        prediction = tf.layers.dense(inputs=prev_layer, units=1, activation=activation)
-        return prediction
-
-    def early_stopping(self, array, patience):
-        value = array[len(array) - patience - 1]
-        arr = array[len(array) - patience:]
-        check = 0
-        for val in arr:
-            if val >= value:
-                check += 1
-        if check >= patience - 1:
-            return True
-        else:
-            return False
-
-    def __fit_with_bp(self):
         tf.reset_default_graph()
+        self.sess = tf.Session()
 
-        # define placeholder of graph
-        x_inference = tf.placeholder("float", [None, self.x_train_inference.shape[1]])
-        y_inference = tf.placeholder("float", [None, self.y_train_inference.shape[1]])
-        # state_encoder = tf.placeholder("float", [None, self.num_units_lstm[-1]])
-        # input_inference = tf.concat([x_inference, state_encoder], 1)
-        prediction = self.mlp(x_inference, self.num_units_inference, self.activation_func)
-
-        loss = tf.reduce_mean(tf.square(y_inference - prediction))
-        # optimization
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
-
+        self._build_model()
         init = tf.global_variables_initializer()
-        with tf.Session() as sess:
-            sess.run(init)
-            saver = tf.train.Saver()
-            # training bnn model
-            print("start training bnn model")
-            cost_train_set = []
-            cost_valid_set = []
-            for epoch in range(self.epochs):
-                # Train with each example
-                print('epoch BNN model: ', epoch + 1)
-                total_batch = int(len(self.x_train_inference) / self.batch_size)
-                print(total_batch)
-                start_time = time.time()
-                avg_cost = 0
-                for i in range(total_batch):
-                    batch_xs_inference = self.x_train_inference[i * self.batch_size:(i + 1) * self.batch_size]
-                    batch_ys_inference = self.y_train_inference[i * self.batch_size:(i + 1) * self.batch_size]
-                    sess.run(optimizer, feed_dict={x_inference: batch_xs_inference,
-                                                   y_inference: batch_ys_inference})
+        self.saver = tf.train.Saver()
+        self.sess.run(init)
 
-                    avg_cost += sess.run(loss, feed_dict={x_inference: batch_xs_inference,
-                                                          y_inference: batch_ys_inference})
-                # Display logs per epoch step
-                training_history = 'Epoch inference %04d: cost = %.9f with time: %.2f'\
-                    % (epoch + 1, avg_cost, time.time() - start_time)
-                print(training_history)
-                val_cost = sess.run(loss, feed_dict={x_inference: self.x_valid_inference,
-                                                     y_inference: self.y_valid_inference})
-                cost_train_set.append(avg_cost)
-                cost_valid_set.append(val_cost)
-                if epoch > self.patience:
-                    if self.early_stopping(cost_train_set, self.patience):
-                        print("early stopping BNN training process")
-                        break
-            saver.save(sess, self.model_saved_path)
-            self.draw_train_loss(cost_train_set, cost_valid_set)
-            print('training BNN with back propagation complete!!!')
-            prediction = sess.run(prediction, feed_dict={x_inference: self.x_test_inference})
-            prediction_inverse = self.scaler.inverse_transform(prediction)
-            prediction_inverse = np.asarray(prediction_inverse)
-            self.y_test_inversed = self.scaler.inverse_transform(self.y_test_inference)
+    def _build_model(self):
+        self._x_encoder = tf.placeholder(tf.float32, [None] + self.encoder_input_shape, 'x_encoder')
 
-            mae_err = MAE(prediction_inverse, self.y_test_inversed)
-            rmse_err = np.sqrt(MSE(prediction_inverse, self.y_test_inversed))
-
-            prediction_df = pd.DataFrame(np.array(prediction_inverse))
-            prediction_df.to_csv(self.results_save_path, index=False, header=None)
-
-            with open(self.evaluation_path, 'a+') as f:
-                f.write(self.file_name + ',' + str(mae_err) + ',' + str(rmse_err) + '\n')
-
-            print("=== error = {}, {} ===".format(mae_err, rmse_err))
-
-            sess.close()
-
-    def __fit_with_pso(self):
-        print('>>>> Start training inference with pso algorithm <<<')
-
-        space = Space(self.num_particle, self.x_train_inference, self.y_train_inference, self.x_valid_inference,
-                      self.y_valid_inference, self.x_test_inference, self.y_test_inference, self.batch_size,
-                      self.epochs)
-        space.particles = []
-
-        for _ in range(self.num_particle):
-            tf.reset_default_graph()
-
-            # define placeholder of graph
-            x_inference = tf.placeholder("float", [None, self.x_train_inference.shape[1]], name='x')
-            y_inference = tf.placeholder("float", [None, self.y_train_inference.shape[1]], name='y')
-            prediction = self.mlp(x_inference, self.num_units_inference, self.activation_func)
-            prediction = tf.identity(prediction, name='prediction')
-            loss = tf.reduce_mean(tf.square(y_inference - prediction))
-            loss = tf.identity(loss, name='loss')
-            graph = tf.get_default_graph()
-            sess = tf.Session()
-            trainable_variables = tf.trainable_variables()
-            trainable_tensor = []
-            # self.update_tensor_opts = []
-            for i, v in enumerate(trainable_variables):
-                v_tensor = graph.get_tensor_by_name(v.name)
-                _initiate_value = np.random.uniform(-1, 1, v_tensor.shape)
-                sess.run(tf.assign(v_tensor, _initiate_value))
-
-                trainable_tensor.append(v_tensor)
-            # init = tf.global_variables_initializer()
-            # sess.run(init)
-            saver = tf.train.Saver()
-            space.particles.append(Particle(graph, sess))
-        best_particle, prediction, cost_train_set, cost_valid_set = space.train()
-        inversed_prediction = self.scaler.inverse_transform(prediction)
-        inversed_prediction = np.asarray(inversed_prediction)
-        self.y_test_inversed = self.scaler.inverse_transform(self.y_test_inference)
-
-        prediction_df = pd.DataFrame(np.array(inversed_prediction))
-        prediction_df.to_csv(self.results_save_path, index=False, header=None)
-
-        mae_err = MAE(inversed_prediction, self.y_test_inversed)
-        rmse_err = np.sqrt(MSE(inversed_prediction, self.y_test_inversed))
-        print("=== error inference model: {}, {} ===".format(mae_err, rmse_err))
-        with open(self.evaluation_path, 'a+') as f:
-            f.write(self.file_name + ',' + str(mae_err) + ',' + str(rmse_err) + '\n')
-        saver.save(best_particle.sess, self.model_saved_path)
-        self.draw_train_loss(cost_train_set, cost_valid_set)
-
-    def fit(self):
-        training_time_evaluation_file = CORE_DATA_DIR + '/bnn/training_time_evaluation.csv'
-        start_all_time = time.time()
-
-        print(">>> Start training bnn model <<<")
-        self.preprocessing_data()
-        if self.optimizer_approach.lower() == 'bp':
-            print(">>> Training bnn with back propagation <<<")
-            self.__fit_with_bp()
-        elif self.optimizer_approach.lower() == 'pso':
-            print(">>> Training bnn with pso <<<")
-            self.__fit_with_pso()
+        self._output_encoder, self._hidden_state = self.encoder_net(self._x_encoder)
+        if self.cell_type == 'lstm':
+            self._hidden_state_vector = self._hidden_state[-1].h
         else:
-            ">>> error: We don't support this optimzer approach! <<<"
-        with open(training_time_evaluation_file, 'a+') as f:
-            f.write(self.model_saved_path + ',' + str(time.time() - start_all_time) + '\n')
+            self._hidden_state_vector = self._hidden_state[-1]
+        self._x_inf = tf.placeholder(tf.float32, [None] + self.inf_input_shape, 'x_inf')
+        self._input_inf = input_inference = tf.concat([self._x_inf, self._hidden_state_vector], 1)
+        self._pred = self.inf_net(self._input_inf)
+        self._y = tf.placeholder(tf.float32, self._pred.shape, 'y')
+
+        self._loss = tf.losses.mean_squared_error(self._y, self._pred)
+        self._train_op = self.optimizer.minimize(self._loss)
+
+    def load_model(self):
+        metadata = '{}.meta'.format(self.model_path)
+        model_graph_dir = self.model_path.rsplit(os.sep, 1)[0]
+
+        # assert os.path.isfile(metadata), 'Not found classifier graph in path: {}'.format(metadata)
+        if not os.path.isfile(metadata):
+            print('Not found classifier graph in path: {}'.format(metadata))
+            return
+
+        # run on its own graph session
+        self.graph = tf.Graph()
+        self.sess = tf.Session(graph=self.graph)
+        with self.graph.as_default():
+
+            checkpoint = tf.train.import_meta_graph(metadata)
+            checkpoint.restore(self.sess, tf.train.latest_checkpoint(model_graph_dir))
+            f = open('nodes.txt', 'a+')
+            for v in self.graph.as_graph_def().node:
+                f.write(v.name + '\n')
+            self._x_encoder = self.graph.get_tensor_by_name('x_encoder:0')
+            self._x_inf = self.graph.get_tensor_by_name('x_inf:0')
+            self._pred = self.graph.get_tensor_by_name('inf_net/prediction/Sigmoid:0')
+
+    def _step(self, x_encoder, x_inf, y=None, mode='predict'):
+        if mode == 'predict':
+            return self.sess.run(self._pred, feed_dict={self._x_encoder: x_encoder, self._x_inf: x_inf})
+        elif mode == 'train':
+            l, _ = self.sess.run(
+                [self._loss, self._train_op], feed_dict={self._x_encoder: x_encoder, self._x_inf: x_inf, self._y: y})
+            return l
+
+    def _step_batch(self, x_encoder, x_inf, y=None, batch_size=1, mode='predict'):
+        n_batch = math.ceil(len(x_encoder) / batch_size)
+        results = []
+        for batch in range(n_batch):
+            x_e_b = x_encoder[batch * batch_size: (batch + 1) * batch_size]
+            x_i_b = x_inf[batch * batch_size: (batch + 1) * batch_size]
+            if y is not None:
+                y_b = y[batch * batch_size: (batch + 1) * batch_size]
+            else:
+                y_b = None
+            res = self._step(x_e_b, x_i_b, y_b, mode)
+            results.append(res)
+        if mode == 'train':
+            return results
+        if mode == 'predict':
+            return np.concatenate(results, axis=0)
+
+    def fit(self, x_encoder, x_inf, y, validation_split=0, batch_size=1, epochs=2000, verbose=1, step_print=1,
+            early_stopping=True, patience=20):
+
+        # Create x_train and y_train
+        do_validation = False
+        if 0 < validation_split < 1:
+            do_validation = True
+            n_train = int((1 - validation_split) * len(x_encoder))
+            x_encoder_valid = x_encoder[n_train:]
+            x_inf_valid = x_inf[n_train:]
+            y_valid = y[n_train:]
+            x_encoder_train = x_encoder[:n_train]
+            x_inf_train = x_inf[:n_train]
+            y_train = y[:n_train]
+        else:
+            x_encoder_train = x_encoder
+            x_inf_train = x_inf
+            y_train = y
+
+        # Start optimization process
+        self.train_loss_arr = []
+        self.valid_loss_arr = []
+        for epoch in range(epochs):
+            _train_loss = self._step_batch(x_encoder_train, x_inf_train, y_train, batch_size, mode='train')
+            avg_loss_train = average(_train_loss)
+            self.train_loss_arr.append(avg_loss_train)
+            if (epoch + 1) % step_print == 0:
+                validation_state = ''
+                if do_validation:
+                    result_eval = self.evaluate(x_encoder_valid, x_inf_valid, y_valid)
+                    validation_state = ', validation - {}'.format(result_eval['mse'])
+                    self.valid_loss_arr.append(result_eval['mse'])
+                # print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
+                # print(f'mean_squared_error inf: training - {round(avg_loss_train, 7)}{validation_state}')
+
+            if early_stopping:
+                if epoch > patience:
+                    if not early_stopping(train_loss_arr, self.patience):
+                        print('|>>> Early stopping training ...')
+                        break
+
+    def predict(self, x_encoder, x_inf):
+        return self._step_batch(x_encoder, x_inf, mode='predict', batch_size=len(x_encoder))
+
+    def evaluate(self, x_encoder, x_inf, y):
+        pred = self.predict(x_encoder, x_inf)
+        return evaluate(y, pred, ('mae', 'rmse', 'mse', 'mape', 'smape'))

@@ -92,7 +92,7 @@ class DataPreprocessor:
         print(y_train.shape, y_test.shape)
         print('>>> Init data for training model complete <<<')
 
-        return x_train, y_train, x_test, y_test
+        return x_train, y_train, x_test, y_test, data_normalizer
 
     def init_data_ann(self, sliding, scaler_method):
         # print('>>> start init data for training ANN model <<<')
@@ -126,120 +126,87 @@ class DataPreprocessor:
 
         return x_train, y_train, x_test, y_test
 
-    def create_x_decoder_from_x_encoder(self, x_encoder):
+    def create_x_decoder_from_x_encoder(self, x_encoder, sliding_decoder):
         x_decoder = []
-        for i in range(len(x_encoder)):
-            _x_decoder = [np.array([1] * x_encoder.shape[2])]
-            for j in range(len(x_encoder[i]) - 1, 0, -1):
-                _x_decoder.append(x_encoder[i][j])
+        for i in range(len(x_encoder) - 1):
+            _x_decoder = []
+            for j in range(sliding_decoder, 0, -1):
+                _x_decoder.append(x_encoder[i][len(x_encoder[i]) - j])
             x_decoder.append(_x_decoder)
-        return np.array(x_decoder)
+        x_decoder = np.array(x_decoder)
+        return x_decoder
 
-    def create_y_decoder_from_x_encoder(self, x_encoder):
+    def create_y_decoder_from_x_encoder(self, x_encoder, sliding_decoder):
         y_decoder = []
-        for i in range(len(x_encoder)):
+        for i in range(len(x_encoder) - 1):
             _y_decoder = []
-            for j in range(len(x_encoder[i])):
-                _y_decoder.append(x_encoder[i][j][0])
-            _y_decoder.reverse()
+            for j in range(sliding_decoder, 0, -1):
+                _y_decoder.append(x_encoder[i + 1][len(x_encoder[i + 1]) - j])
+
             y_decoder.append(_y_decoder)
         y_decoder = np.array(y_decoder)
         y_decoder = np.reshape(y_decoder, (y_decoder.shape[0], 1, y_decoder.shape[1]))
         return y_decoder
 
-    def init_data_autoencoder(self, sliding_encoder):
-        print('>>> start init data for training autoencoder model <<<')
+    def init_data_autoencoder(self, sliding_encoder, sliding_decoder, scaler_method):
+        # print('>>> start init data for training autoencoder model <<<')
 
-        if Config.DATA_EXPERIMENT == 'google_trace':
-            if Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'cpu_mem':
-                x_data = [self.data['cpu'], self.data['mem']]
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'uni_cpu':
-                x_data = [self.data['cpu']]
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'uni_mem':
-                x_data = [self.data['mem']]
+        data_normalizer = DataNormalizer(scaler_method)
+        x_timeseries, y_time_series, self.y_scaler = data_normalizer.normalize(self.x_data, self.y_data)
 
-            if Config.GOOGLE_TRACE_DATA_CONFIG['predict_data'] == 'cpu':
-                y_data = self.data['cpu']
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['predict_data'] == 'mem':
-                y_data = self.data['mem']
-        else:
-            print("We do not support your data for preprocessing!")
-
-        x_timeseries = self.create_timeseries(x_data)
         num_points = x_timeseries.shape[0]
         train_point = int(self.train_size * num_points)
-        valid_point = int((self.train_size + self.valid_size) * num_points)
 
-        x_sampple_encoder = self.create_x(x_timeseries, sliding_encoder)
+        x_sample_encoder = self.create_x(x_timeseries, sliding_encoder)
 
-        x_train_encoder = x_sampple_encoder[0: train_point - sliding_encoder]
+        x_train_encoder = x_sample_encoder[0: train_point - sliding_encoder + 1]
         x_train_encoder = np.array(x_train_encoder)
-        x_train_decoder = self.create_x_decoder_from_x_encoder(x_train_encoder)
-        y_train_decoder = self.create_y_decoder_from_x_encoder(x_train_encoder)
+        x_train_decoder = self.create_x_decoder_from_x_encoder(x_train_encoder, sliding_decoder)
+        y_train_decoder = self.create_y_decoder_from_x_encoder(x_train_encoder, sliding_decoder)
+        x_train_encoder = x_train_encoder[: -1]
+        # print(x_train_encoder.shape, x_train_decoder.shape, y_train_decoder.shape)
+        # exit(0)
 
-        x_valid_encoder = x_sampple_encoder[train_point - sliding_encoder: valid_point - sliding_encoder]
-        x_valid_encoder = np.array(x_valid_encoder)
-        x_valid_decoder = self.create_x_decoder_from_x_encoder(x_valid_encoder)
-        y_valid_decoder = self.create_y_decoder_from_x_encoder(x_valid_encoder)
-
-        x_test_encoder = x_sampple_encoder[valid_point - sliding_encoder:]
+        x_test_encoder = x_sample_encoder[train_point - sliding_encoder:]
         x_test_encoder = np.array(x_test_encoder)
-        x_test_decoder = self.create_x_decoder_from_x_encoder(x_test_encoder)
-        y_test_decoder = self.create_y_decoder_from_x_encoder(x_test_encoder)
-        print('>>> Init data for training autoencoder model complete <<<')
+        # x_test_decoder = self.create_x_decoder_from_x_encoder(x_test_encoder)
+        # y_test_decoder = self.create_y_decoder_from_x_encoder(x_test_encoder)
+        # x_test_encoder = x_test_encoder[: -1]
 
-        return x_train_encoder, x_train_decoder, y_train_decoder, x_valid_encoder, x_valid_decoder, y_valid_decoder,\
-            x_test_encoder, x_test_decoder, y_test_decoder
+        # print(x_train_encoder.shape, x_train_decoder.shape, y_train_decoder.shape)
+        # print(x_test_encoder.shape, x_test_decoder.shape, y_test_decoder.shape)
 
-    def init_data_inference(self, sliding_encoder, sliding_inference):
-        print('>>> start init data for training inference model <<<')
+        # print('>>> Init data for training autoencoder model complete <<<')
 
-        if Config.DATA_EXPERIMENT == 'google_trace':
-            if Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'cpu_mem':
-                x_data = [self.data['cpu'], self.data['mem']]
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'uni_cpu':
-                x_data = [self.data['cpu']]
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['train_data_type'] == 'uni_mem':
-                x_data = [self.data['mem']]
+        return x_train_encoder, x_train_decoder, y_train_decoder, x_test_encoder
 
-            if Config.GOOGLE_TRACE_DATA_CONFIG['predict_data'] == 'cpu':
-                y_data = self.data['cpu']
-            elif Config.GOOGLE_TRACE_DATA_CONFIG['predict_data'] == 'mem':
-                y_data = self.data['mem']
-        else:
-            print("We do not support your data for preprocessing!")
+    def init_data_inf(self, sliding_encoder, sliding_inf, scaler_method):
+        # print('>>> start init data for training inference model <<<')
 
-        x_timeseries = self.create_timeseries(x_data)
+        data_normalizer = DataNormalizer(scaler_method)
+        x_timeseries, y_time_series, self.y_scaler = data_normalizer.normalize(self.x_data, self.y_data)
+
         num_points = x_timeseries.shape[0]
         train_point = int(self.train_size * num_points)
-        valid_point = int((self.train_size + self.valid_size) * num_points)
 
-        x_sample_inference = self.create_x(x_timeseries, sliding_inference)
+        x_sample_inference = self.create_x(x_timeseries, sliding_inf)
 
-        x_train_inference = x_sample_inference[sliding_encoder - sliding_inference: train_point - sliding_inference]
+        x_train_inference = x_sample_inference[sliding_encoder - sliding_inf: train_point - sliding_inf]
         x_train_inference = np.array(x_train_inference)
-        x_train_inference = np.reshape(x_train_inference, (x_train_inference.shape[0],
-                                       x_train_inference.shape[1] * x_train_inference.shape[2]))
+        x_train_inference = np.reshape(
+            x_train_inference, (x_train_inference.shape[0], x_train_inference.shape[1] * x_train_inference.shape[2]))
 
-        x_valid_inference = x_sample_inference[train_point - sliding_inference: valid_point - sliding_inference]
-        x_valid_inference = np.array(x_valid_inference)
-        x_valid_inference = np.reshape(x_valid_inference, (x_valid_inference.shape[0],
-                                       x_valid_inference.shape[1] * x_valid_inference.shape[2]))
-
-        x_test_inference = x_sample_inference[valid_point - sliding_inference:]
+        x_test_inference = x_sample_inference[train_point - sliding_inf:]
         x_test_inference = np.array(x_test_inference)
-        x_test_inference = np.reshape(x_test_inference, (x_test_inference.shape[0],
-                                      x_test_inference.shape[1] * x_test_inference.shape[2]))
+        x_test_inference = np.reshape(
+            x_test_inference, (x_test_inference.shape[0], x_test_inference.shape[1] * x_test_inference.shape[2]))
 
-        y_train_inference = y_data[sliding_encoder: train_point]
+        y_train_inference = y_time_series[sliding_encoder: train_point]
         y_train_inference = np.array(y_train_inference)
 
-        y_valid_inference = y_data[train_point: valid_point]
-        y_valid_inference = np.array(y_valid_inference)
-
-        y_test_inference = y_data[valid_point:]
+        y_test_inference = y_time_series[train_point:]
         y_test_inference = np.array(y_test_inference)
-        print('>>> Init data for training BNN model complete <<<')
+        # print('>>> Init data for training BNN model complete <<<')
 
-        return x_train_inference, y_train_inference, x_valid_inference, y_valid_inference, x_test_inference,\
-            y_test_inference
+        return x_train_inference, y_train_inference, x_test_inference, y_test_inference, data_normalizer
+

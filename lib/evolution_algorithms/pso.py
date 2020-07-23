@@ -1,5 +1,7 @@
 import time
 import math
+import pickle as pkl
+import threading
 
 import numpy as np
 import random
@@ -14,19 +16,21 @@ from lib.includes.utility import *
 
 
 class Particle:
-    def __init__(self, type_attr, min_val, max_val, range_val, name):
+    def __init__(self, type_attr, min_val, max_val, range_val, name, fitness_type):
 
         self.type_attr = type_attr
         self.min_val = min_val
         self.max_val = max_val
         self.range_val = range_val
         self.name = name
+        self.fitness_type = fitness_type
         self.position = self.min_val + (self.max_val - self.min_val) * np.random.rand(len(type_attr))
         self.position = self._corect_pos(self.position)
 
         self.velocity = np.random.uniform(-1, 1, len(type_attr))  # particle position
 
         self.pbest_position = self.position
+        self.pbest_model = None
         self.pbest_value = float('inf')
 
     def _corect_pos(self, position):
@@ -34,16 +38,6 @@ class Particle:
             if _type == 'discrete':
                 position[i] = int(position[i])
         return position
-
-    # def decode_position(self, position):
-    #     result = []
-    #     for i, t in enumerate(self.type_attr):
-    #         if t == 'discrete':
-    #             result.append(self.range_val[i][int(position[i])])
-    #         else:
-    #             result.append(position[i])
-
-    #     return result
 
     def decode_position(self, position):
         result = {}
@@ -64,24 +58,28 @@ class Particle:
 
     # evaluate current fitness
     def evaluate(self, fitness_function):
-        self.err = fitness_function(self.decode_position(self.position))
-
+        fitness, model = fitness_function(self.decode_position(self.position), self.fitness_type)
         # check to see if the current position is an individual best
-        if self.err < self.pbest_value:
+        if fitness < self.pbest_value:
             self.pbest_position = self.position
-            self.pbest_value = self.err
+            self.pbest_value = fitness
+            self.pbest_model = model
 
 
 class Space:
-    def __init__(self, fitness_function, domain, num_particle=5):
+    def __init__(self, fitness_function, fitness_type, domain, num_particle=50):
 
         self.fitness_function = fitness_function
+        self.fitness_type = fitness_type
 
         self._parse_domain(domain)
         self.num_particle = num_particle
         self.create_particles()
 
         self.gbest_value = float('inf')
+        self.gbest_attribute = None
+        self.gbest_model = None
+        self.gbest_position = None
         self.gbest_paticle = None
         self.max_w_old_velocation = 0.9
         self.min_w_old_velocation = 0.4
@@ -125,40 +123,37 @@ class Space:
         self.particles = []
         for i in range(self.num_particle):
             self.particles.append(
-                Particle(self.type_attr, self.min_val, self.max_val, self.range_val, self.name))
+                Particle(self.type_attr, self.min_val, self.max_val, self.range_val, self.name, self.fitness_type))
 
     def print_particles(self):
         for particle in self.particles:
             particle.__str__()
-        
+
     def evaluate(self, particle):
-        return particle.evaluate(self.fitness_function)
+        particle.evaluate(self.fitness_function)
+
+    def _set_gbest(self, particle):
+        self.evaluate(particle)
+        print('evaluate in _set_gbest: ', self.gbest_value, particle.pbest_value)
+        if self.gbest_value > particle.pbest_value:
+            self.gbest_value = particle.pbest_value
+            self.gbest_position = particle.pbest_position
+            self.gbest_attribute = particle.decode_position(particle.pbest_position)
+            self.gbest_model = particle.pbest_model
+            self.gbest_paticle = particle
 
     def set_gbest(self):
 
-        # queue = Queue()
-        # for particle in self.particles:
-        #     queue.put_nowait(particle)
-            # summary = open(self.evaluation_path, 'a+')
-            # summary.write('Model, MAE, RMSE\n')
-            # print('>>> start experiment ANN model <<<')
-        # pool = Pool(1)
-        # pool.map(self.evaluate, list(queue.queue))
-        # pool.close()
-        # pool.join()
-        # pool.terminate()
-
+        thread = []
         for particle in self.particles:
-            particle.evaluate(self.fitness_function)
-            # print(particle.pbest_value)
-            if particle.pbest_value < self.gbest_value:
-                self.gbest_position = particle.pbest_position
-                self.gbest_value = particle.pbest_value
+            _thread = threading.Thread(target=self._set_gbest, args=(particle,))
+            thread.append(_thread)
 
-            if self.gbest_value > particle.pbest_value:
-                self.gbest_value = particle.pbest_value
-                self.gbest_position = particle.pbest_position
-                self.gbest_paticle = particle
+        for _thread in thread:
+            _thread.start()
+
+        for _thread in thread:
+            _thread.join()
 
     def move_particles(self):
         for particle in self.particles:
@@ -175,7 +170,7 @@ class Space:
             # assign new value for trainables value to be nearer optimize global
             particle.move()
 
-    def optimize(self, max_iter, early_stopping, patience=20):
+    def optimize(self, max_iter, early_stopping=False, patience=20, step_save=10):
         optimize_loss = []
 
         for iteration in range(max_iter):
@@ -187,15 +182,32 @@ class Space:
 
             self.move_particles()
 
-            optimize_loss.append(round(self.gbest_value, 7))
+            optimize_loss.append(self.gbest_value)
             training_history = 'iteration: %d fitness = %.8f with time for running: %.2f '\
-                % (iteration, self.gbest_value, time.time() - start_time)
+                % (iteration + 1, self.gbest_value, time.time() - start_time)
             print(training_history)
+
+            model_name = self.gbest_model.model_path.split('/')[-1]
+
+            # Save fitness, best model and best parameter
+            if (iteration + 1) % step_save == 0:
+
+                saved_path = f'{Config.RESULTS_SAVE_PATH}iter_{iteration + 1}'
+                model_path = f'{saved_path}/model/{model_name}'
+                gen_folder_in_path(saved_path)
+
+                with open('{}/optimize_infor.pkl'.format(saved_path), 'wb') as out:
+                    pkl.dump(self.gbest_attribute, out, pkl.HIGHEST_PROTOCOL)
+                    pkl.dump(model_path, out, pkl.HIGHEST_PROTOCOL)
+                    pkl.dump(optimize_loss, out, pkl.HIGHEST_PROTOCOL)
+
+                self.gbest_model.save_model(model_path)
+
             if early_stopping:
                 if len(optimize_loss) > patience:
                     if early_stopping(optimize_loss, patience):
                         print('[X] -> Early stoping because the profit is not increase !!!')
                         break
 
-        print('The best solution in iterations: {} has fitness = {} in train set'.format(iteration, self.gbest_value))
+        print('Best solution in iterations: {} has fitness = {}'.format(iteration + 1, self.gbest_value))
         return self.gbest_paticle

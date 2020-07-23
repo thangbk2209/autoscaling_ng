@@ -4,6 +4,10 @@
   Created: 3/15/19 16:48
   Purpose:
 """
+
+import random
+import os
+
 import matplotlib
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
@@ -27,6 +31,8 @@ def draw_time_series(data, title, x_label, y_label, file_name):
 def get_scaler(scaler_method):
     if scaler_method == 'min_max_scaler':
         return MinMaxScaler(feature_range=(0, 1))
+    if scaler_method == 'standard_scaler':
+        return StandardScaler()
     else:
         print(f'|-> ERROR: Not support {scaler_method}')
 
@@ -93,3 +99,46 @@ def create_name(**kwargs):
         _name = f'{_key}_{value}'
         name.append(_name)
     return '-'.join(name)
+
+
+def generate_units_size(network_size, layer_size):
+
+    assert network_size > 0, 'Network size invalid'
+    assert layer_size > 0, 'Layer size invalid'
+
+    num_units = []
+    for i in range(network_size):
+        num_units.append(random.choice(range(1, layer_size, 1)))
+    return num_units
+
+
+def compute_scale_fitness_value(prediction_interval, real_value):
+
+    rate_real_value_in_prediction_interval = 0
+    real_scale_value_error = 0
+    num_sample = len(prediction_interval)
+
+    for i in range(num_sample):
+
+        _real_value = real_value[i][0]
+        lower_border = prediction_interval[i][0]
+        higher_border = prediction_interval[i][1]
+
+        if _real_value <= higher_border and _real_value >= lower_border:
+            rate_real_value_in_prediction_interval += 1 / num_sample
+
+        # real_scale_value_error += (higher_border - _real_value) ** 2 / num_sample
+        real_scale_value_error += \
+            2 * abs(higher_border - _real_value) / (abs(higher_border) + abs(_real_value)) / num_sample
+    return rate_real_value_in_prediction_interval, real_scale_value_error
+
+
+def gen_folder_in_path(path):
+    path_component = path.split('/')
+    path_infor = ''
+    for _path_component in path_component:
+        path_infor += f'/{_path_component}'
+        if not os.path.exists(path_infor):
+            os.mkdir(path_infor)
+
+    assert os.path.exists(path_infor), f'Can not generate folder in path {path}'

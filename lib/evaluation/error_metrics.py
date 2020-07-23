@@ -294,7 +294,7 @@ METRICS = {
 }
 
 
-def evaluate(actual: np.ndarray, predicted: np.ndarray, metrics=('mae', 'rmse', 'mse', 'smape', 'umbrae')):
+def evaluate(actual: np.ndarray, predicted: np.ndarray, metrics=('mae', 'rmse', 'mse', 'mape', 'smape')):
     results = {}
     for name in metrics:
         try:

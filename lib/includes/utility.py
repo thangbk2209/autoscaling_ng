@@ -61,7 +61,7 @@ def get_optimizer(optimizer_name, lr):
         print(">>> Can not apply your optimizer <<<")
 
 
-def early_stopping(array, patience):
+def early_stopping_decision(array, patience):
     value = array[len(array) - patience - 1]
     arr = array[len(array) - patience:]
     check = 0

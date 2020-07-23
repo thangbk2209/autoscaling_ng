@@ -181,7 +181,7 @@ class BnnPredictor(BaseModel):
 
             if early_stopping:
                 if epoch > patience:
-                    if not early_stopping(train_loss_arr, self.patience):
+                    if not early_stopping_decision(self.train_loss_arr, self.patience):
                         print('|>>> Early stopping training ...')
                         break
 

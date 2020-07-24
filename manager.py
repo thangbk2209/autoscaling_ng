@@ -38,6 +38,7 @@ def evaluate_model():
         iteration = sys.argv[2]
         value_optimize = sys.argv[3]
     except Exception as ex:
+        value_optimize = ''
         print('[ERROR] Can not define your iteration')
 
     model_evaluator = ModelEvaluator()
@@ -76,7 +77,6 @@ def download():
                 ['curl', '-o', file_save_path, line], stdout=PIPE, stderr=PIPE)
             stderr, stdout = process.communicate()
             print(f'===> stderr: {stderr}')
-            print(f'===> stdout: {stdout}')
             print(f' === download {file_name} complete === ')
 
 

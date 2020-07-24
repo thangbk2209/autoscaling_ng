@@ -36,11 +36,21 @@ def init_model():
 def evaluate_model():
     try:
         iteration = sys.argv[2]
+        value_optimize = sys.argv[3]
     except Exception as ex:
         print('[ERROR] Can not define your iteration')
 
     model_evaluator = ModelEvaluator()
-    model_evaluator.evaluate_bnn(iteration, visualize_option=True)
+    preprocess_item = None
+    if value_optimize == 'hyper_parameter':
+        preprocess_item = {
+            'scaler': 'min_max_scaler',
+            'sliding_encoder': 6,
+            'sliding_decoder': 4,
+            'sliding_inf': 2
+        }
+
+    model_evaluator.evaluate_bnn(iteration, preprocess_item, visualize_option=True)
 
 
 def download():

@@ -67,7 +67,7 @@ class Particle:
 
 
 class Space:
-    def __init__(self, fitness_function, fitness_type, domain, num_particle=50):
+    def __init__(self, fitness_function, fitness_type, domain, num_particle=2):
 
         self.fitness_function = fitness_function
         self.fitness_type = fitness_type
@@ -134,7 +134,7 @@ class Space:
 
     def _set_gbest(self, particle):
         self.evaluate(particle)
-        print('evaluate in _set_gbest: ', self.gbest_value, particle.pbest_value)
+
         if self.gbest_value > particle.pbest_value:
             self.gbest_value = particle.pbest_value
             self.gbest_position = particle.pbest_position
@@ -145,17 +145,17 @@ class Space:
     def set_gbest(self):
 
         thread = []
-        for particle in self.particles:
-            _thread = threading.Thread(target=self._set_gbest, args=(particle,))
-            thread.append(_thread)
-
-        for _thread in thread:
-            _thread.start()
-
-        for _thread in thread:
-            _thread.join()
         # for particle in self.particles:
-            # self._set_gbest(particle)
+        #     _thread = threading.Thread(target=self._set_gbest, args=(particle,))
+        #     thread.append(_thread)
+
+        # for _thread in thread:
+        #     _thread.start()
+
+        # for _thread in thread:
+        #     _thread.join()
+        for particle in self.particles:
+            self._set_gbest(particle)
 
     def move_particles(self):
         for particle in self.particles:
@@ -172,7 +172,24 @@ class Space:
             # assign new value for trainables value to be nearer optimize global
             particle.move()
 
-    def optimize(self, max_iter, early_stopping=False, patience=20, step_save=10):
+    def save_best_particle(self, iteration, optimize_loss):
+        model_name = self.gbest_model.model_path.split('/')[-1]
+
+        if Config.VALUE_OPTIMIZE == 'all_parameter':
+            saved_path = f'{Config.RESULTS_SAVE_PATH}iter_{iteration + 1}'
+        else:
+            preprocess_name = self.gbest_model.preprocess_name
+            saved_path = f'{Config.RESULTS_SAVE_PATH}{preprocess_name}/iter_{iteration + 1}'
+        print('start save best particle at: ', saved_path)
+        model_path = f'{saved_path}/model/{model_name}'
+        gen_folder_in_path(saved_path)
+        with open('{}/optimize_infor.pkl'.format(saved_path), 'wb') as out:
+            pkl.dump(self.gbest_attribute, out, pkl.HIGHEST_PROTOCOL)
+            pkl.dump(model_path, out, pkl.HIGHEST_PROTOCOL)
+            pkl.dump(optimize_loss, out, pkl.HIGHEST_PROTOCOL)
+        self.gbest_model.save_model(model_path)
+
+    def optimize(self, max_iter, early_stopping=False, patience=20, step_save=2):
         optimize_loss = []
 
         for iteration in range(max_iter):
@@ -190,27 +207,15 @@ class Space:
                 % (self.gbest_value, time.time() - start_time)
             print(training_history)
 
-            model_name = self.gbest_model.model_path.split('/')[-1]
-
             # Save fitness, best model and best parameter
             if (iteration + 1) % step_save == 0:
+                self.save_best_particle(iteration, optimize_loss)
 
-                saved_path = f'{Config.RESULTS_SAVE_PATH}iter_{iteration + 1}'
-                model_path = f'{saved_path}/model/{model_name}'
-                gen_folder_in_path(saved_path)
-
-                with open('{}/optimize_infor.pkl'.format(saved_path), 'wb') as out:
-                    pkl.dump(self.gbest_attribute, out, pkl.HIGHEST_PROTOCOL)
-                    pkl.dump(model_path, out, pkl.HIGHEST_PROTOCOL)
-                    pkl.dump(optimize_loss, out, pkl.HIGHEST_PROTOCOL)
-
-                self.gbest_model.save_model(model_path)
-
-            if early_stopping:
-                if len(optimize_loss) > patience:
-                    if early_stopping(optimize_loss, patience):
-                        print('[X] -> Early stoping because the profit is not increase !!!')
-                        break
-
+            # if early_stopping:
+            #     if len(optimize_loss) > patience:
+            #         if early_stopping(optimize_loss, patience):
+            #             print('[X] -> Early stoping because the profit is not increase !!!')
+            #             break
+        self.save_best_particle(iteration, optimize_loss)
         print('Best solution in iterations: {} has fitness = {}'.format(iteration + 1, self.gbest_value))
         return self.gbest_paticle

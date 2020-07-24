@@ -9,6 +9,7 @@ from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn import datasets
 from sklearn.metrics import mean_squared_error
 import matplotlib
+import threading
 
 from config import *
 from lib.preprocess.read_data import DataReader
@@ -33,8 +34,6 @@ class ModelTrainer:
 
         self.lstm_config = Config.LSTM_CONFIG
         self.ann_config = Config.ANN_CONFIG
-        self.pso_config = Config.PSO_CONFIG
-        self.pso_bnn_config = Config.PSO_BNN_CONFIG
         self.bnn_config = Config.BNN_CONFIG
         self.method_experimet = Config.MODEL_EXPERIMENT
 
@@ -234,11 +233,17 @@ class ModelTrainer:
         real_scale_value_error = None
         validation_error = None
 
-        scaler_method = item['scaler']
-        batch_size = item['batch_size']
-        sliding_encoder = item['sliding_encoder']
-        sliding_decoder = item['sliding_decoder']
-        sliding_inf = item['sliding_inf']
+        if 'scaler' in item and 'sliding_encoder' in item and 'sliding_decoder' in item and 'sliding_inf' in item:
+            scaler_method = item['scaler']
+            sliding_encoder = item['sliding_encoder']
+            sliding_decoder = item['sliding_decoder']
+            sliding_inf = item['sliding_inf']
+        else:
+            scaler_method = self.scaler
+            sliding_encoder = self.sliding_encoder
+            sliding_decoder = self.sliding_decoder
+            sliding_inf = self.sliding_inf
+
         # Generate autoencoder units
         network_size_encoder = item['network_size_encoder']
         layer_size_encoder = item['layer_size_encoder']
@@ -254,6 +259,7 @@ class ModelTrainer:
         optimizer = item['optimizer']
         learning_rate = item['learning_rate']
         cell_type = item['cell_type']
+        batch_size = item['batch_size']
 
         if 'save_mode' in item:
             save_mode = item['save_mode']
@@ -311,14 +317,17 @@ class ModelTrainer:
         pretrained_encoder_net = autoencoder_model.encoder_net
 
         bnn_model_name = create_name(
-            scaler=scaler_method, sli_enc=sliding_encoder, sli_inf=sliding_inf, batch=batch_size,
-            unit_ae=num_unit_autoencoder, unit_inf=num_unit_inf, drop=dropout, act=activation, opt=optimizer,
-            l_r=learning_rate, cell=cell_type)
+            scaler=scaler_method, sli_enc=sliding_encoder, sli_dec=sliding_decoder, sli_inf=sliding_inf,
+            batch=batch_size, unit_ae=num_unit_autoencoder, unit_inf=num_unit_inf, drop=dropout, act=activation, 
+            opt=optimizer, l_r=learning_rate, cell=cell_type)
 
         bnn_model_path = f'{self.results_save_path}/{bnn_model_name}'
+        preprocess_name = create_name(
+            scaler=scaler_method, sli_enc=sliding_encoder, sli_dec=sliding_decoder, sli_inf=sliding_inf)
 
         bnn_model = BnnPredictor(
             model_path=bnn_model_path,
+            preprocess_name=preprocess_name,
             pretrained_encoder_net=pretrained_encoder_net,
             encoder_input_shape=encoder_input_shape,
             inf_input_shape=inf_input_shape,
@@ -364,11 +373,40 @@ class ModelTrainer:
 
         return fitness_value, bnn_model
 
-    def train_with_bnn(self):
+    def _train_with_bnn(self, item):
+        self.sliding_encoder = item['sliding_encoder']
+        self.sliding_decoder = item['sliding_decoder']
+        self.sliding_inf = item['sliding_inf']
+        self.scaler = item['scaler']
 
-        space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain'])
-        max_iter = 200
+        space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain_hyper_parameter'])
+        max_iter = 10
         pbest_particle = space.optimize(max_iter)
+
+    def train_with_bnn(self):
+        if Config.VALUE_OPTIMIZE == 'all_parameter':
+            space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain'])
+            max_iter = 10
+            pbest_particle = space.optimize(max_iter)
+
+        elif Config.VALUE_OPTIMIZE == 'hyper_parameter':
+
+            param_grid = {
+                'sliding_encoder': Config.BNN_CONFIG['sliding_encoder'],
+                'sliding_decoder': Config.BNN_CONFIG['sliding_decoder'],
+                'sliding_inf': Config.BNN_CONFIG['sliding_inf'],
+                'scaler': Config.BNN_CONFIG['scaler']
+            }
+
+            # Create combination of params.
+            queue = Queue()
+            for item in list(ParameterGrid(param_grid)):
+                queue.put_nowait(item)
+            pool = Pool(3)
+            pool.map(self._train_with_bnn, list(queue.queue))
+            pool.close()
+            pool.join()
+            pool.terminate()
 
     def fit_with_gan(self, item):
         scaler_method = item['scaler']

@@ -208,7 +208,7 @@ class UnsupervisedPretrainModel(BaseModel):
         if mode == 'predict':
             return np.concatenate(results, axis=0)
 
-    def fit(self, x_encoder, x_decoder, y, validation_split=0, batch_size=1, epochs=2000, verbose=1, step_print=1,
+    def fit(self, x_encoder, x_decoder, y, validation_split=0, batch_size=1, epochs=2, verbose=1, step_print=1,
             early_stopping=True, patience=20):
 
         # Create x_train and y_train
@@ -239,8 +239,9 @@ class UnsupervisedPretrainModel(BaseModel):
                     result_eval = self.evaluate(x_valid, y_valid)
                     validation_state = ', validation - {}'.format(result_eval['mse'])
                     self.valid_loss_arr.append(result_eval['mse'])
-                print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
-                print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
+
+                # print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
+                # print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
 
             if early_stopping:
                 if epoch > patience:

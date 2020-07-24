@@ -26,6 +26,7 @@ class BnnPredictor(BaseModel):
     def __init__(
         self,
         model_path=None,
+        preprocess_name=None,
         pretrained_encoder_net=None,
         encoder_input_shape=None,
         inf_input_shape=None,
@@ -39,7 +40,7 @@ class BnnPredictor(BaseModel):
         learning_rate=None,
         initial_state=True
     ):
-
+        self.preprocess_name = preprocess_name
         self.num_units = num_units
         self.activation = activation
         self.dropout = dropout
@@ -144,7 +145,7 @@ class BnnPredictor(BaseModel):
         if mode == 'predict':
             return np.concatenate(results, axis=0)
 
-    def fit(self, x_encoder, x_inf, y, validation_split=0, batch_size=1, epochs=2000, verbose=1, step_print=1,
+    def fit(self, x_encoder, x_inf, y, validation_split=0, batch_size=1, epochs=2, verbose=1, step_print=1,
             early_stopping=True, patience=20):
 
         # Create x_train and y_train

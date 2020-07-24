@@ -9,7 +9,7 @@ import random
 import os
 
 import matplotlib
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import tensorflow as tf
 
 from config import *
@@ -112,25 +112,21 @@ def generate_units_size(network_size, layer_size):
     return num_units
 
 
-def compute_scale_fitness_value(prediction_interval, real_value):
+def compute_scale_fitness_value(upper_prediction, lower_prediction, real_value):
 
     rate_real_value_in_prediction_interval = 0
-    real_scale_value_error = 0
-    num_sample = len(prediction_interval)
+    num_sample = len(upper_prediction)
 
     for i in range(num_sample):
 
         _real_value = real_value[i][0]
-        lower_border = prediction_interval[i][0]
-        higher_border = prediction_interval[i][1]
+        lower_border = lower_prediction[i]
+        higher_border = upper_prediction[i]
 
         if _real_value <= higher_border and _real_value >= lower_border:
             rate_real_value_in_prediction_interval += 1 / num_sample
 
-        # real_scale_value_error += (higher_border - _real_value) ** 2 / num_sample
-        real_scale_value_error += \
-            2 * abs(higher_border - _real_value) / (abs(higher_border) + abs(_real_value)) / num_sample
-    return rate_real_value_in_prediction_interval, real_scale_value_error
+    return rate_real_value_in_prediction_interval
 
 
 def gen_folder_in_path(path):

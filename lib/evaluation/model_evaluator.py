@@ -87,7 +87,6 @@ class ModelEvaluator:
         mean_predict, uncertainty = \
             self.fitness_manager.evaluate_uncertainty(
                 bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, x_test_encoder, x_test_inf, y_valid_inf)
-        print(uncertainty)
         # mean_predict = data_normalizer.invert_tranform(mean_predict)
         y_test_inf = data_normalizer.invert_tranform(y_test_inf)
 

@@ -15,8 +15,8 @@ class Config:
         PLT_ENV = 'TkAgg'  # TkAgg
 
         GOOGLE_TRACE_DATA_CONFIG = {
-            'train_data_type': 'mem',  # cpu_mem, uni_mem, uni_cpu
-            'predict_data': 'mem',
+            'train_data_type': 'cpu',  # cpu_mem, uni_mem, uni_cpu
+            'predict_data': 'cpu',
             'data_type': 'all_jobs',  # 1_job, all_jobs
             'time_interval': 5,
             'file_data_name': '/input_data/google_trace/{}/{}_mins.csv',
@@ -28,7 +28,7 @@ class Config:
             'file_data_name': '/input_data/grid_data/timeseries_anonjobs_{}Min.csv',
             'data_path': CORE_DATA_DIR + '{}',
             'colnames': ['job_id_data', 'n_proc_data', 'used_cpu_time_data', 'used_memory_data', 'user_id_data',
-                        'group_id_data']
+                         'group_id_data']
         }
 
         TRAFFIC_JAM_DATA_CONFIG = {
@@ -53,7 +53,7 @@ class Config:
 
         FITNESS_TYPE = 'bayesian_autoscaling'  # validation_error, bayesian_autoscaling
         FITNESS_NORMALIZE_METHOD = 'normalized_value'  # 'smape', 'normalized_value'
-        VALUE_OPTIMIZE = 'hyper_parameter'  # 'hyper_parameter', 'all_parameter'
+        VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
 
         LEARNING_RATE = 3e-4
         EPOCHS = 5

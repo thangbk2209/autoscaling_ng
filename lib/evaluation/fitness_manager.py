@@ -2,6 +2,9 @@ import math
 
 import numpy as np
 from sklearn.metrics import mean_squared_error
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 from lib.includes.utility import *
 from lib.evaluation.error_metrics import *
@@ -40,6 +43,11 @@ class FitnessManager:
         mean_valid_y_inf_predict, y_valid_inf_predict = self.get_model_prediction(
             bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, number_of_time_to_evaluate)
 
+        y_valid_inf = data_normalizer.invert_tranform(y_valid_inf)
+        plt.plot(y_valid_inf, label='actual')
+        plt.plot(mean_valid_y_inf_predict, label='prediction')
+        plt.legend()
+        plt.show()
         evaluate_result = evaluate(mean_valid_y_inf_predict, y_valid_inf)
         inherence_noise = evaluate_result['mse']
 
@@ -53,6 +61,8 @@ class FitnessManager:
                 _err = mean_squared_error(mean_test_y_inf_predict[i], y_test_inf_predict[j][i])
                 err.append(_err)
             _model_miss_uncertainty = sum(err) / number_of_time_to_evaluate
+            # print(_model_miss_uncertainty, inherence_noise)
+            # print('---')
             _overall_uncertainty = math.sqrt(_model_miss_uncertainty + inherence_noise)
             model_miss_uncertainty.append(_model_miss_uncertainty)
             overall_uncertainty.append(_overall_uncertainty)
@@ -61,6 +71,7 @@ class FitnessManager:
 
     def get_prediction_interval(
             self, bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, y_valid_inf, number_of_time_to_evaluate=50):
+
         mean_y_inf_valid_predict, y_inf_valid_predict = self.get_model_prediction(
             bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, number_of_time_to_evaluate)
         inherence_noise = evaluate(mean_y_inf_valid_predict, y_valid_inf)['mse']

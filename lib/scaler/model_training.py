@@ -39,6 +39,7 @@ class ModelTrainer:
 
         self.learning_rate = Config.LEARNING_RATE
         self.epochs = Config.EPOCHS
+        self.max_iter = Config.MAX_ITER
         self.early_stopping = Config.EARLY_STOPPING
         self.patience = Config.PATIENCE
         self.train_size = Config.TRAIN_SIZE
@@ -226,7 +227,8 @@ class ModelTrainer:
         validation_split = 0.1
 
         autoencoder_model.fit(
-            x_train_encoder, x_train_decoder, y_train_decoder, validation_split=validation_split, batch_size=batch_size)
+            x_train_encoder, x_train_decoder, y_train_decoder, validation_split=validation_split, batch_size=batch_size,
+            epochs=self.epochs)
         return autoencoder_model
 
     def fit_with_bnn(self, item, fitness_type):
@@ -354,7 +356,8 @@ class ModelTrainer:
         y_train_inf = y_train_inf[:n_train]
 
         bnn_model.fit(
-            x_train_encoder, x_train_inf, y_train_inf, validation_split=validation_split, batch_size=batch_size)
+            x_train_encoder, x_train_inf, y_train_inf, validation_split=validation_split, batch_size=batch_size,
+            epochs=self.epochs)
 
         if save_mode:
             gen_folder_in_path(autoencoder_model_path)
@@ -380,14 +383,12 @@ class ModelTrainer:
         self.scaler = item['scaler']
 
         space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain_hyper_parameter'])
-        max_iter = 200
-        pbest_particle = space.optimize(max_iter)
+        pbest_particle = space.optimize(self.max_iter)
 
     def train_with_bnn(self):
         if Config.VALUE_OPTIMIZE == 'all_parameter':
             space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain'])
-            max_iter = 200
-            pbest_particle = space.optimize(max_iter)
+            pbest_particle = space.optimize(self.max_iter)
 
         elif Config.VALUE_OPTIMIZE == 'hyper_parameter':
 

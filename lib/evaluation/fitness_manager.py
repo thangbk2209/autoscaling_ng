@@ -32,6 +32,7 @@ class FitnessManager:
                                     number_of_time_to_evaluate=50):
         mean_y_inf_valid_predict, y_inf_valid_predict = self.get_model_prediction(
             bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, number_of_time_to_evaluate)
+        mean_y_inf_valid_predict = data_normalizer.y_tranform(mean_y_inf_valid_predict)
         validation_error = evaluate(mean_y_inf_valid_predict, y_valid_inf)['rmse']
         return validation_error
 

@@ -155,6 +155,9 @@ class Space:
         for _thread in thread:
             _thread.join()
 
+        # for particle in self.particles:
+        #     self._set_gbest(particle)
+
     def move_particles(self):
         for particle in self.particles:
             r1 = np.random.random_sample()

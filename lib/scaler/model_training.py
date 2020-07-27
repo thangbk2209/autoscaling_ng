@@ -403,6 +403,7 @@ class ModelTrainer:
             queue = Queue()
             for item in list(ParameterGrid(param_grid)):
                 queue.put_nowait(item)
+                # self._train_with_bnn(item)
             pool = Pool(2)
             pool.map(self._train_with_bnn, list(queue.queue))
             pool.close()

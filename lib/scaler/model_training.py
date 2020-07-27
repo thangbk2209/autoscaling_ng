@@ -9,6 +9,7 @@ from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn import datasets
 from sklearn.metrics import mean_squared_error
 import matplotlib
+import threading
 
 from config import *
 from lib.preprocess.read_data import DataReader
@@ -33,13 +34,12 @@ class ModelTrainer:
 
         self.lstm_config = Config.LSTM_CONFIG
         self.ann_config = Config.ANN_CONFIG
-        self.pso_config = Config.PSO_CONFIG
-        self.pso_bnn_config = Config.PSO_BNN_CONFIG
         self.bnn_config = Config.BNN_CONFIG
         self.method_experimet = Config.MODEL_EXPERIMENT
 
         self.learning_rate = Config.LEARNING_RATE
         self.epochs = Config.EPOCHS
+        self.max_iter = Config.MAX_ITER
         self.early_stopping = Config.EARLY_STOPPING
         self.patience = Config.PATIENCE
         self.train_size = Config.TRAIN_SIZE
@@ -224,8 +224,11 @@ class ModelTrainer:
             initial_state=initial_state
         )
 
+        validation_split = 0.1
+
         autoencoder_model.fit(
-            x_train_encoder, x_train_decoder, y_train_decoder, validation_split=0, batch_size=batch_size)
+            x_train_encoder, x_train_decoder, y_train_decoder, validation_split=validation_split, batch_size=batch_size,
+            epochs=self.epochs)
         return autoencoder_model
 
     def fit_with_bnn(self, item, fitness_type):
@@ -234,11 +237,17 @@ class ModelTrainer:
         real_scale_value_error = None
         validation_error = None
 
-        scaler_method = item['scaler']
-        batch_size = item['batch_size']
-        sliding_encoder = item['sliding_encoder']
-        sliding_decoder = item['sliding_decoder']
-        sliding_inf = item['sliding_inf']
+        if 'scaler' in item and 'sliding_encoder' in item and 'sliding_decoder' in item and 'sliding_inf' in item:
+            scaler_method = item['scaler']
+            sliding_encoder = item['sliding_encoder']
+            sliding_decoder = item['sliding_decoder']
+            sliding_inf = item['sliding_inf']
+        else:
+            scaler_method = self.scaler
+            sliding_encoder = self.sliding_encoder
+            sliding_decoder = self.sliding_decoder
+            sliding_inf = self.sliding_inf
+
         # Generate autoencoder units
         network_size_encoder = item['network_size_encoder']
         layer_size_encoder = item['layer_size_encoder']
@@ -254,6 +263,7 @@ class ModelTrainer:
         optimizer = item['optimizer']
         learning_rate = item['learning_rate']
         cell_type = item['cell_type']
+        batch_size = item['batch_size']
 
         if 'save_mode' in item:
             save_mode = item['save_mode']
@@ -311,14 +321,17 @@ class ModelTrainer:
         pretrained_encoder_net = autoencoder_model.encoder_net
 
         bnn_model_name = create_name(
-            scaler=scaler_method, sli_enc=sliding_encoder, sli_inf=sliding_inf, batch=batch_size,
-            unit_ae=num_unit_autoencoder, unit_inf=num_unit_inf, drop=dropout, act=activation, opt=optimizer,
-            l_r=learning_rate, cell=cell_type)
+            scaler=scaler_method, sli_enc=sliding_encoder, sli_dec=sliding_decoder, sli_inf=sliding_inf,
+            batch=batch_size, unit_ae=num_unit_autoencoder, unit_inf=num_unit_inf, drop=dropout, act=activation, 
+            opt=optimizer, l_r=learning_rate, cell=cell_type)
 
         bnn_model_path = f'{self.results_save_path}/{bnn_model_name}'
+        preprocess_name = create_name(
+            scaler=scaler_method, sli_enc=sliding_encoder, sli_dec=sliding_decoder, sli_inf=sliding_inf)
 
         bnn_model = BnnPredictor(
             model_path=bnn_model_path,
+            preprocess_name=preprocess_name,
             pretrained_encoder_net=pretrained_encoder_net,
             encoder_input_shape=encoder_input_shape,
             inf_input_shape=inf_input_shape,
@@ -343,7 +356,8 @@ class ModelTrainer:
         y_train_inf = y_train_inf[:n_train]
 
         bnn_model.fit(
-            x_train_encoder, x_train_inf, y_train_inf, validation_split=validation_split, batch_size=batch_size)
+            x_train_encoder, x_train_inf, y_train_inf, validation_split=validation_split, batch_size=batch_size,
+            epochs=self.epochs)
 
         if save_mode:
             gen_folder_in_path(autoencoder_model_path)
@@ -352,8 +366,6 @@ class ModelTrainer:
             bnn_model.save_model()
 
         fitness_manager = FitnessManager()
-
-        y_valid_inf = data_nomalizer.invert_tranform(y_valid_inf)
 
         if fitness_type == 'bayesian_autoscaling':
             fitness_value = fitness_manager.evaluate_fitness_bayesian(
@@ -364,11 +376,39 @@ class ModelTrainer:
 
         return fitness_value, bnn_model
 
-    def train_with_bnn(self):
+    def _train_with_bnn(self, item):
+        self.sliding_encoder = item['sliding_encoder']
+        self.sliding_decoder = item['sliding_decoder']
+        self.sliding_inf = item['sliding_inf']
+        self.scaler = item['scaler']
 
-        space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain'])
-        max_iter = 200
-        pbest_particle = space.optimize(max_iter)
+        space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain_hyper_parameter'])
+        pbest_particle = space.optimize(self.max_iter)
+
+    def train_with_bnn(self):
+        if Config.VALUE_OPTIMIZE == 'all_parameter':
+            space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain'])
+            pbest_particle = space.optimize(self.max_iter)
+
+        elif Config.VALUE_OPTIMIZE == 'hyper_parameter':
+
+            param_grid = {
+                'sliding_encoder': Config.BNN_CONFIG['sliding_encoder'],
+                'sliding_decoder': Config.BNN_CONFIG['sliding_decoder'],
+                'sliding_inf': Config.BNN_CONFIG['sliding_inf'],
+                'scaler': Config.BNN_CONFIG['scaler']
+            }
+
+            # Create combination of params.
+            queue = Queue()
+            for item in list(ParameterGrid(param_grid)):
+                queue.put_nowait(item)
+                # self._train_with_bnn(item)
+            pool = Pool(2)
+            pool.map(self._train_with_bnn, list(queue.queue))
+            pool.close()
+            pool.join()
+            pool.terminate()
 
     def fit_with_gan(self, item):
         scaler_method = item['scaler']

@@ -26,6 +26,7 @@ class BnnPredictor(BaseModel):
     def __init__(
         self,
         model_path=None,
+        preprocess_name=None,
         pretrained_encoder_net=None,
         encoder_input_shape=None,
         inf_input_shape=None,
@@ -39,7 +40,7 @@ class BnnPredictor(BaseModel):
         learning_rate=None,
         initial_state=True
     ):
-
+        self.preprocess_name = preprocess_name
         self.num_units = num_units
         self.activation = activation
         self.dropout = dropout

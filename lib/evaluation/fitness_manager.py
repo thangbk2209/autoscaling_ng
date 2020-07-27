@@ -3,12 +3,12 @@ import math
 import numpy as np
 from sklearn.metrics import mean_squared_error
 import matplotlib
-matplotlib.use('TkAgg')
+from config import *
+matplotlib.use(Config.PLT_ENV)
 import matplotlib.pyplot as plt
 
 from lib.includes.utility import *
 from lib.evaluation.error_metrics import *
-from config import *
 
 
 class FitnessManager:

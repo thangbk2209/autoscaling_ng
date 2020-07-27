@@ -142,7 +142,7 @@ class Config:
         }
     elif ENV == 'experiment':
         DATA_EXPERIMENT = 'google_trace'  # grid, traffic, google_trace
-        PLT_ENV = 'TkAgg'  # TkAgg
+        PLT_ENV = 'Agg'  # TkAgg
 
         GOOGLE_TRACE_DATA_CONFIG = {
             'train_data_type': 'cpu',  # cpu_mem, uni_mem, uni_cpu

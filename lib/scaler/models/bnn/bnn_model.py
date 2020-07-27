@@ -145,7 +145,7 @@ class BnnPredictor(BaseModel):
         if mode == 'predict':
             return np.concatenate(results, axis=0)
 
-    def fit(self, x_encoder, x_inf, y, validation_split=0, batch_size=1, epochs=2, verbose=1, step_print=1,
+    def fit(self, x_encoder, x_inf, y, validation_split=0, batch_size=1, epochs=2000, verbose=1, step_print=1,
             early_stopping=True, patience=20):
 
         # Create x_train and y_train

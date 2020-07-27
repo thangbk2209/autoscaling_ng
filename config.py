@@ -4,7 +4,7 @@ PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 CORE_DATA_DIR = PROJECT_DIR + '/{}'.format('data')
 
 ENV_LIST = ['development', 'experiment']
-ENV_DEFAULT = 'development'
+ENV_DEFAULT = 'experiment'
 
 ENV = ENV_DEFAULT
 
@@ -248,9 +248,9 @@ class Config:
                 {'name': 'sliding_decoder', 'type': 'discrete', 'domain': [6, 8, 10, 12]},
                 {'name': 'sliding_inf', 'type': 'discrete', 'domain': [2, 3, 4, 5]},
                 {'name': 'network_size_encoder', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
-                {'name': 'layer_size_encoder', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
+                {'name': 'layer_size_encoder', 'type': 'discrete', 'domain': [2, 4, 8, 16, 32, 64]},
                 {'name': 'network_size_inf', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
-                {'name': 'layer_size_inf', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
+                {'name': 'layer_size_inf', 'type': 'discrete', 'domain': [2, 4, 8, 16, 32, 64]},
                 {'name': 'dropout', 'type': 'continuous', 'domain': (0.01, 0.2)},
                 {'name': 'learning_rate', 'type': 'continuous', 'domain': (0.0001, 0.01)},
                 {'name': 'optimizer', 'type': 'discrete', 'domain': [1, 2, 3]},
@@ -260,9 +260,9 @@ class Config:
             'domain_hyper_parameter': [
                 {'name': 'batch_size', 'type': 'discrete', 'domain': [8, 16, 32, 64, 128]},
                 {'name': 'network_size_encoder', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
-                {'name': 'layer_size_encoder', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
+                {'name': 'layer_size_encoder', 'type': 'discrete', 'domain': [2, 4, 8, 16, 32, 64]},
                 {'name': 'network_size_inf', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
-                {'name': 'layer_size_inf', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
+                {'name': 'layer_size_inf', 'type': 'discrete', 'domain': [2, 4, 8, 16, 32, 64]},
                 {'name': 'dropout', 'type': 'continuous', 'domain': (0.01, 0.2)},
                 {'name': 'learning_rate', 'type': 'continuous', 'domain': (0.0001, 0.01)},
                 {'name': 'optimizer', 'type': 'discrete', 'domain': [1, 2, 3]},

@@ -67,7 +67,7 @@ class Particle:
 
 
 class Space:
-    def __init__(self, fitness_function, fitness_type, domain, num_particle=2):
+    def __init__(self, fitness_function, fitness_type, domain, num_particle=50):
 
         self.fitness_function = fitness_function
         self.fitness_type = fitness_type
@@ -145,17 +145,15 @@ class Space:
     def set_gbest(self):
 
         thread = []
-        # for particle in self.particles:
-        #     _thread = threading.Thread(target=self._set_gbest, args=(particle,))
-        #     thread.append(_thread)
-
-        # for _thread in thread:
-        #     _thread.start()
-
-        # for _thread in thread:
-        #     _thread.join()
         for particle in self.particles:
-            self._set_gbest(particle)
+            _thread = threading.Thread(target=self._set_gbest, args=(particle,))
+            thread.append(_thread)
+
+        for _thread in thread:
+            _thread.start()
+
+        for _thread in thread:
+            _thread.join()
 
     def move_particles(self):
         for particle in self.particles:
@@ -189,7 +187,7 @@ class Space:
             pkl.dump(optimize_loss, out, pkl.HIGHEST_PROTOCOL)
         self.gbest_model.save_model(model_path)
 
-    def optimize(self, max_iter, early_stopping=False, patience=20, step_save=2):
+    def optimize(self, max_iter, early_stopping=False, patience=20, step_save=5):
         optimize_loss = []
 
         for iteration in range(max_iter):

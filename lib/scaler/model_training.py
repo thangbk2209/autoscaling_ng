@@ -380,13 +380,13 @@ class ModelTrainer:
         self.scaler = item['scaler']
 
         space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain_hyper_parameter'])
-        max_iter = 10
+        max_iter = 200
         pbest_particle = space.optimize(max_iter)
 
     def train_with_bnn(self):
         if Config.VALUE_OPTIMIZE == 'all_parameter':
             space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain'])
-            max_iter = 10
+            max_iter = 200
             pbest_particle = space.optimize(max_iter)
 
         elif Config.VALUE_OPTIMIZE == 'hyper_parameter':
@@ -402,7 +402,7 @@ class ModelTrainer:
             queue = Queue()
             for item in list(ParameterGrid(param_grid)):
                 queue.put_nowait(item)
-            pool = Pool(3)
+            pool = Pool(2)
             pool.map(self._train_with_bnn, list(queue.queue))
             pool.close()
             pool.join()

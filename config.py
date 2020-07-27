@@ -186,7 +186,9 @@ class Config:
         VALUE_OPTIMIZE = 'hyper_parameter'  # 'hyper_parameter', 'all_parameter'
 
         LEARNING_RATE = 3e-4
-        EPOCHS = 5
+        MAX_ITER = 200
+        NUM_PARTICLE = 30
+        EPOCHS = 2000
         EARLY_STOPPING = True
         PATIENCE = 20
         TRAIN_SIZE = 0.2

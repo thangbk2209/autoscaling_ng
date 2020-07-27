@@ -67,13 +67,13 @@ class Particle:
 
 
 class Space:
-    def __init__(self, fitness_function, fitness_type, domain, num_particle=50):
+    def __init__(self, fitness_function, fitness_type, domain, num_particle=None):
 
         self.fitness_function = fitness_function
         self.fitness_type = fitness_type
 
         self._parse_domain(domain)
-        self.num_particle = num_particle
+        self.num_particle = Config.NUM_PARTICLE
         self.create_particles()
 
         self.gbest_value = float('inf')

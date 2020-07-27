@@ -223,8 +223,10 @@ class ModelTrainer:
             initial_state=initial_state
         )
 
+        validation_split = 0.1
+
         autoencoder_model.fit(
-            x_train_encoder, x_train_decoder, y_train_decoder, validation_split=0, batch_size=batch_size)
+            x_train_encoder, x_train_decoder, y_train_decoder, validation_split=validation_split, batch_size=batch_size)
         return autoencoder_model
 
     def fit_with_bnn(self, item, fitness_type):
@@ -361,8 +363,6 @@ class ModelTrainer:
             bnn_model.save_model()
 
         fitness_manager = FitnessManager()
-
-        y_valid_inf = data_nomalizer.invert_tranform(y_valid_inf)
 
         if fitness_type == 'bayesian_autoscaling':
             fitness_value = fitness_manager.evaluate_fitness_bayesian(

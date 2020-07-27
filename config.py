@@ -53,7 +53,7 @@ class Config:
 
         FITNESS_TYPE = 'bayesian_autoscaling'  # validation_error, bayesian_autoscaling
         FITNESS_NORMALIZE_METHOD = 'normalized_value'  # 'smape', 'normalized_value'
-        VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
+        VALUE_OPTIMIZE = 'hyper_parameter'  # 'hyper_parameter', 'all_parameter'
 
         LEARNING_RATE = 3e-4
         EPOCHS = 5

@@ -192,6 +192,7 @@ class UnsupervisedPretrainModel(BaseModel):
             return l
 
     def _step_batch(self, x_encoder, x_decoder, y=None, batch_size=1, mode='predict'):
+
         n_batch = math.ceil(len(x_encoder) / batch_size)
         results = []
         for batch in range(n_batch):
@@ -208,17 +209,19 @@ class UnsupervisedPretrainModel(BaseModel):
         if mode == 'predict':
             return np.concatenate(results, axis=0)
 
-    def fit(self, x_encoder, x_decoder, y, validation_split=0, batch_size=1, epochs=50, verbose=1, step_print=1,
+    def fit(self, x_encoder, x_decoder, y, validation_split=0, batch_size=1, epochs=2, verbose=1, step_print=1,
             early_stopping=True, patience=20):
 
         # Create x_train and y_train
         do_validation = False
         if 0 < validation_split < 1:
             do_validation = True
-            n_train = int((1 - validation_split) * len(x))
-            x_valid = x[n_train:]
+            n_train = int((1 - validation_split) * len(x_encoder))
+            x_valid_encoder = x_encoder[n_train:]
+            x_valid_decoder = x_decoder[n_train:]
             y_valid = y[n_train:]
-            x_train = x[:n_train]
+            x_train_encoder = x_encoder[:n_train]
+            x_train_decoder = x_decoder[:n_train]
             y_train = y[:n_train]
         else:
             x_train_encoder = x_encoder
@@ -235,10 +238,10 @@ class UnsupervisedPretrainModel(BaseModel):
             self.train_loss_arr.append(avg_loss_train)
             if (epoch + 1) % step_print == 0:
                 validation_state = ''
-                if do_validation:
-                    result_eval = self.evaluate(x_valid, y_valid)
-                    validation_state = ', validation - {}'.format(result_eval['mse'])
-                    self.valid_loss_arr.append(result_eval['mse'])
+                # if do_validation:
+                #     result_eval = self.evaluate(x_valid_encoder, x_valid_decoder, y_valid)
+                #     validation_state = ', validation - {}'.format(result_eval['mse'])
+                #     self.valid_loss_arr.append(result_eval['mse'])
 
                 print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
                 print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
@@ -248,3 +251,10 @@ class UnsupervisedPretrainModel(BaseModel):
                     if not early_stopping_decision(self.train_loss_arr, self.patience):
                         print('|>>> Early stopping training ...')
                         break
+
+    def predict(self, x_encoder, x_decoder):
+        return self._step_batch(x_encoder, x_decoder, mode='predict', batch_size=len(x_encoder))
+
+    def evaluate(self, x_encoder, x_decoder, y):
+        pred = self.predict(x_encoder, x_decoder)
+        return evaluate(y, pred, ('mae', 'rmse', 'mse', 'mape', 'smape'))

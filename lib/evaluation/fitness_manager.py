@@ -44,10 +44,10 @@ class FitnessManager:
             bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, number_of_time_to_evaluate)
 
         y_valid_inf = data_normalizer.invert_tranform(y_valid_inf)
-        plt.plot(y_valid_inf, label='actual')
-        plt.plot(mean_valid_y_inf_predict, label='prediction')
-        plt.legend()
-        plt.show()
+        # plt.plot(y_valid_inf, label='actual')
+        # plt.plot(mean_valid_y_inf_predict, label='prediction')
+        # plt.legend()
+        # plt.show()
         evaluate_result = evaluate(mean_valid_y_inf_predict, y_valid_inf)
         inherence_noise = evaluate_result['mse']
 
@@ -98,9 +98,12 @@ class FitnessManager:
 
     def evaluate_fitness_bayesian_normalized(
             self, bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, y_valid_inf, number_of_time_to_evaluate=50):
+
+        y_valid_inf = data_normalizer.invert_tranform(y_valid_inf)
+
         mean_y_inf_valid_predict, lower_prediction, upper_prediction = \
             self.get_prediction_interval(bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, y_valid_inf,
-                                         number_of_time_to_evaluate=50)
+                                         number_of_time_to_evaluate=number_of_time_to_evaluate)
 
         rate_real_value_in_prediction_interval = \
             compute_scale_fitness_value(upper_prediction, lower_prediction, y_valid_inf)  # rate
@@ -122,9 +125,11 @@ class FitnessManager:
     def evaluate_fitness_bayesian_based_smape(
             self, bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, y_valid_inf, number_of_time_to_evaluate=50):
 
+        y_valid_inf = data_normalizer.invert_tranform(y_valid_inf)
+
         mean_y_inf_valid_predict, lower_prediction, upper_prediction = \
             self.get_prediction_interval(bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, y_valid_inf,
-                                         number_of_time_to_evaluate=50)
+                                         number_of_time_to_evaluate=number_of_time_to_evaluate)
 
         rate_real_value_in_prediction_interval = \
             compute_scale_fitness_value(upper_prediction, lower_prediction, y_valid_inf)  # rate

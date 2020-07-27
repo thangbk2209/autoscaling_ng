@@ -243,8 +243,8 @@ class UnsupervisedPretrainModel(BaseModel):
                 #     validation_state = ', validation - {}'.format(result_eval['mse'])
                 #     self.valid_loss_arr.append(result_eval['mse'])
 
-                print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
-                print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
+                # print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
+                # print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
 
             if early_stopping:
                 if epoch > patience:

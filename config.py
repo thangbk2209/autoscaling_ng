@@ -183,7 +183,7 @@ class Config:
 
         FITNESS_TYPE = 'validation_error'  # validation_error, bayesian_autoscaling
         FITNESS_NORMALIZE_METHOD = 'smape'  # 'smape', 'normalized_value'
-        VALUE_OPTIMIZE = 'hyper_parameter'  # 'hyper_parameter', 'all_parameter'
+        VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
 
         LEARNING_RATE = 3e-4
         MAX_ITER = 200

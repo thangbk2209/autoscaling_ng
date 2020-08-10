@@ -142,7 +142,8 @@ class Config:
         }
     elif ENV == 'experiment':
         DATA_EXPERIMENT = 'google_trace'  # grid, traffic, google_trace
-        PLT_ENV = 'Agg'  # TkAgg
+
+        PLT_ENV = 'Agg'  # TkAgg, Agg
 
         GOOGLE_TRACE_DATA_CONFIG = {
             'train_data_type': 'cpu',  # cpu_mem, uni_mem, uni_cpu
@@ -182,7 +183,7 @@ class Config:
         METAHEURISTIC_METHOD = 'pso'  # pso, whale
 
         FITNESS_TYPE = 'bayesian_autoscaling'  # validation_error, bayesian_autoscaling
-        FITNESS_NORMALIZE_METHOD = 'normalized_value'  # 'smape', 'normalized_value'
+        FITNESS_NORMALIZE_METHOD = 'smape'  # 'smape', 'normalized_value'
         VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
 
         LEARNING_RATE = 3e-4

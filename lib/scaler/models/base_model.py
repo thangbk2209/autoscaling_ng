@@ -10,7 +10,7 @@ from lib.includes.utility import *
 
 
 class BaseModel:
-    def __init__(self, model_path, initial_state):
+    def __init__(self, model_path, initial_state=True):
 
         self.model_path = model_path
 
@@ -114,8 +114,8 @@ class BaseModel:
                     result_eval = self.evaluate(x_valid, y_valid)
                     validation_state = ', validation - {}'.format(result_eval['mse'])
                     self.valid_loss_arr.append(result_eval['mse'])
-                # print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
-                # print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
+                print('Epoch {}/{}'.format(epoch + 1, epochs), end=': ')
+                print(f'mean_squared_error: training - {round(avg_loss_train, 7)}{validation_state}')
 
             if early_stopping:
                 if epoch > patience:

@@ -105,7 +105,6 @@ class BnnPredictor(BaseModel):
         if not os.path.isfile(metadata):
             print('Not found classifier graph in path: {}'.format(metadata))
             return
-
         # run on its own graph session
         self.graph = tf.Graph()
         self.sess = tf.Session(graph=self.graph)

@@ -13,9 +13,10 @@ class DataVisualizer:
         plt.plot(actual, label='Actual')
         plt.plot(prediction, label='Prediction')
         plt.legend()
-        plt.savefig(f'{save_path}.png')
-        plt.savefig(f'{save_path}.pdf')
-        plt.close()
+        plt.show()
+        # plt.savefig(f'{save_path}.png')
+        # plt.savefig(f'{save_path}.pdf')
+        # plt.close()
 
     def visualize_fitness(self, fitness, label, save_path):
         for _fitness, _label in zip(fitness, label):
@@ -38,7 +39,7 @@ class DataVisualizer:
         plt.plot(prediction, label='Prediction')
         plt.fill_between(range(prediction.shape[0]), pred_lower, pred_upper, label='Prediction Interval', color='gray')
         plt.legend()
-        # plt.show()
-        plt.savefig(f'{save_path}.png')
-        plt.savefig(f'{save_path}.pdf')
-        plt.close()
+        plt.show()
+        # plt.savefig(f'{save_path}.png')
+        # plt.savefig(f'{save_path}.pdf')
+        # plt.close()

@@ -165,7 +165,6 @@ class DataPreprocessor:
         y_train_decoder = self.create_y_decoder_from_x_encoder(x_train_encoder, sliding_decoder)
         x_train_encoder = x_train_encoder[: -1]
         # print(x_train_encoder.shape, x_train_decoder.shape, y_train_decoder.shape)
-        # exit(0)
 
         x_test_encoder = x_sample_encoder[train_point - sliding_encoder:]
         x_test_encoder = np.array(x_test_encoder)

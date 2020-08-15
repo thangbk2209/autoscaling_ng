@@ -169,6 +169,7 @@ class ModelTrainer:
         y_predict = model.predict(x_test)
         y_predict = data_normalizer.invert_tranform(y_predict)
         err = model.evaluate(x_test, y_test, data_normalizer)
+
         plt.plot(y_predict, label='prediction')
         plt.plot(y_test, label='real_value')
         plt.show()
@@ -180,8 +181,8 @@ class ModelTrainer:
         item = {
             'scaler': 'min_max_scaler',
             'sliding': 4,
-            'batch_size': 8,
-            'num_unit': [3],
+            'batch_size': 32,
+            'num_unit': [4],
             'activation': 'tanh',
             'optimizer': 'adam',
             'dropout': 0,

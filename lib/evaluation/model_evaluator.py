@@ -78,6 +78,9 @@ class ModelEvaluator:
         decoder_input_shape = [x_train_decoder.shape[1], x_train_decoder.shape[2]]
         inf_input_shape = [x_train_inf.shape[1]]
         output_shape = [y_train_decoder.shape[1], y_train_decoder.shape[2]]
+        model_path = model_path.split('data')
+
+        model_path = CORE_DATA_DIR + model_path[1]
 
         bnn_model = self.model_loader.load_bnn(model_path, encoder_input_shape, inf_input_shape, output_shape)
 
@@ -89,7 +92,6 @@ class ModelEvaluator:
                 bnn_model, data_normalizer, x_valid_encoder, x_valid_inf, x_test_encoder, x_test_inf, y_valid_inf)
         # mean_predict = data_normalizer.invert_tranform(mean_predict)
         y_test_inf = data_normalizer.invert_tranform(y_test_inf)
-
         if visualize_option:
             optimize_process_path = f'{visualize_folder_save_path}/optimize_process'
             prediction_path = f'{visualize_folder_save_path}/prediction'

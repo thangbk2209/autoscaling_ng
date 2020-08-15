@@ -24,6 +24,7 @@ class ModelLoader:
         return autoencoder_model
 
     def load_bnn(self, model_path, encoder_input_shape, inf_input_shape, output_shape):
+
         try:
             bnn_model = BnnPredictor(
                 model_path=model_path,

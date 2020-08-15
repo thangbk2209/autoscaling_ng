@@ -13,6 +13,7 @@ from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn import datasets
 import pandas as pd
 import matplotlib
+import matplotlib.pyplot as plt
 
 from config import *
 from lib.scaler.model_training import ModelTrainer
@@ -22,8 +23,6 @@ from lib.preprocess.read_data import DataReader
 from lib.scaler.preprocessing_data.data_preprocessor import DataPreprocessor
 from lib.evaluation.error_metrics import *
 from lib.evaluation.model_evaluator import ModelEvaluator
-matplotlib.use(Config.PLT_ENV)
-import matplotlib.pyplot as plt
 
 
 def init_model():

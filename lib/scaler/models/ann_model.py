@@ -60,4 +60,3 @@ class AnnPredictor(BaseModel):
             self.model.add(Dropout(self.dropout))
         self.model.add(Dense(1))
         self.model.compile(optimizer=self.optimizer, loss='mse')
-        self.plot_learning_curves()

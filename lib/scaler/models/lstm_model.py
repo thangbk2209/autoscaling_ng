@@ -62,4 +62,4 @@ class LstmPredictor(BaseModel):
                                     dropout=self.dropout, recurrent_dropout=self.dropout,
                                     kernel_initializer='he_normal'))
         self.model.add(Dense(1))
-        self.model.compile(optimizer=self.optimizer, loss='mse')
+        self.model.compile(optimizer=self.optimizer, loss='rmse')

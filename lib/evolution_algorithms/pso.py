@@ -77,9 +77,9 @@ class Space:
         self.create_particles()
 
         self.gbest_value = float('inf')
-        self.gbest_attribute = None
         self.gbest_model = None
         self.gbest_position = None
+        self.gbest_attribute = None
         self.gbest_paticle = None
         self.max_w_old_velocation = 0.9
         self.min_w_old_velocation = 0.4
@@ -156,7 +156,7 @@ class Space:
             _thread.join()
 
         # for particle in self.particles:
-        #     self._set_gbest(particle)
+            # self._set_gbest(particle)
 
     def move_particles(self):
         for particle in self.particles:

@@ -4,7 +4,7 @@ PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 CORE_DATA_DIR = PROJECT_DIR + '/{}'.format('data')
 
 ENV_LIST = ['development', 'experiment']
-ENV_DEFAULT = 'experiment'
+ENV_DEFAULT = 'development'
 
 ENV = ENV_DEFAULT
 
@@ -47,20 +47,22 @@ class Config:
         }
 
         VISUALIZATION = True
-        MODEL_EXPERIMENT = 'bnn'  # lstm, ann, bnn, gan
+        MODEL_EXPERIMENT = 'lstm'  # lstm, ann, bnn, gan
 
         METAHEURISTIC_METHOD = 'pso'  # pso, whale
 
         FITNESS_TYPE = 'bayesian_autoscaling'  # validation_error, bayesian_autoscaling
         FITNESS_NORMALIZE_METHOD = 'normalized_value'  # 'smape', 'normalized_value'
-        VALUE_OPTIMIZE = 'hyper_parameter'  # 'hyper_parameter', 'all_parameter'
+        VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
 
         LEARNING_RATE = 3e-4
-        EPOCHS = 5
+        EPOCHS = 1000
         EARLY_STOPPING = True
         PATIENCE = 20
-        TRAIN_SIZE = 0.2
-        VALID_SIZE = 0.8
+        TRAIN_SIZE = 0.8
+        VALID_SIZE = 0.2
+        MAX_ITER = 200
+        NUM_PARTICLE = 3
 
         if DATA_EXPERIMENT == 'google_trace':
             INFO_SAVED_PATH = 'results/google_trace/{}/{}/{}/{}'.format(
@@ -178,7 +180,7 @@ class Config:
         }
 
         VISUALIZATION = True
-        MODEL_EXPERIMENT = 'bnn'  # lstm, ann, bnn, gan
+        MODEL_EXPERIMENT = 'ann'  # lstm, ann, bnn, gan
 
         METAHEURISTIC_METHOD = 'pso'  # pso, whale
 
@@ -192,8 +194,8 @@ class Config:
         EPOCHS = 1000
         EARLY_STOPPING = True
         PATIENCE = 20
-        TRAIN_SIZE = 0.2
-        VALID_SIZE = 0.8
+        TRAIN_SIZE = 0.8
+        VALID_SIZE = 0.2
 
         if DATA_EXPERIMENT == 'google_trace':
             INFO_SAVED_PATH = 'results/google_trace/{}/{}/{}/{}'.format(

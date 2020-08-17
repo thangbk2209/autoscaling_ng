@@ -22,7 +22,7 @@ from lib.data_visualization.visualize import *
 from lib.preprocess.read_data import DataReader
 from lib.scaler.preprocessing_data.data_preprocessor import DataPreprocessor
 from lib.evaluation.error_metrics import *
-from lib.evaluation.model_evaluator import ModelEvaluator
+# from lib.evaluation.model_evaluator import ModelEvaluator
 
 
 def init_model():
@@ -33,26 +33,26 @@ def init_model():
     print('[1] >>> Init model complete')
 
 
-def evaluate_model():
+# def evaluate_model():
 
-    try:
-        iteration = sys.argv[2]
-        value_optimize = sys.argv[3]
-    except Exception as ex:
-        value_optimize = ''
-        print('[ERROR] Can not define your iteration')
+#     try:
+#         iteration = sys.argv[2]
+#         value_optimize = sys.argv[3]
+#     except Exception as ex:
+#         value_optimize = ''
+#         print('[ERROR] Can not define your iteration')
 
-    model_evaluator = ModelEvaluator()
-    preprocess_item = None
-    if value_optimize == 'hyper_parameter':
-        preprocess_item = {
-            'scaler': 'min_max_scaler',
-            'sliding_encoder': 6,
-            'sliding_decoder': 4,
-            'sliding_inf': 2
-        }
+#     model_evaluator = ModelEvaluator()
+#     preprocess_item = None
+#     if value_optimize == 'hyper_parameter':
+#         preprocess_item = {
+#             'scaler': 'min_max_scaler',
+#             'sliding_encoder': 6,
+#             'sliding_decoder': 4,
+#             'sliding_inf': 2
+#         }
 
-    model_evaluator.evaluate_bnn(iteration, preprocess_item, visualize_option=True)
+#     model_evaluator.evaluate_bnn(iteration, preprocess_item, visualize_option=True)
 
 
 def download():

@@ -108,7 +108,10 @@ def generate_units_size(network_size, layer_size):
 
     num_units = []
     for i in range(network_size):
-        num_units.append(random.choice(range(1, layer_size, 1)))
+        # num_units.append(random.choice(range(1, layer_size, 1)))
+        num_units.append(int(layer_size))
+        if layer_size != 2:
+            layer_size /= 2
     return num_units
 
 

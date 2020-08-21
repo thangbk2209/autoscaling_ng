@@ -30,9 +30,9 @@ class LstmPredictor(BaseModel):
         optimizer=None,
         dropout=None,
         cell_type=None,
-        learning_rate=None
+        learning_rate=None,
+        initial_state=True
     ):
-
         self.input_shape = input_shape
         self.output_shape = output_shape
         self.model_path = model_path
@@ -43,7 +43,7 @@ class LstmPredictor(BaseModel):
         self.cell_type = cell_type
 
         self.optimizer = optimizer
-        super().__init__(model_path)
+        super().__init__(model_path, initial_state)
 
         self.batch_size = batch_size
         self.epochs = Config.EPOCHS
@@ -53,13 +53,9 @@ class LstmPredictor(BaseModel):
     def _build_model(self):
         self.model = Sequential()
         for i, _num_unit in enumerate(self.num_units):
-            if not i:
-                self.model.add(LSTM(_num_unit, activation=self.activation, recurrent_activation=self.activation,
-                                    dropout=self.dropout, recurrent_dropout=self.dropout,
-                                    kernel_initializer='he_normal', input_shape=self.input_shape, return_sequences=True))
-            else:
-                self.model.add(LSTM(_num_unit, activation=self.activation, recurrent_activation=self.activation,
-                                    dropout=self.dropout, recurrent_dropout=self.dropout,
-                                    kernel_initializer='he_normal'))
+            self.model.add(LSTM(_num_unit, activation=self.activation, recurrent_activation=self.activation,
+                                dropout=0, recurrent_dropout=self.dropout,
+                                kernel_initializer='he_normal', input_shape=self.input_shape,
+                                return_sequences=(i != len(self.num_units) - 1)))
         self.model.add(Dense(1))
-        self.model.compile(optimizer=self.optimizer, loss='rmse')
+        self.model.compile(optimizer=self.optimizer, loss='mse')

@@ -12,7 +12,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 
 from lib.scaler.preprocessing_data.data_preprocessor import DataPreprocessor
-from lib.scaler.models.base_model import RegressionModel, BaseModel
+from lib.scaler.models.base_model import BaseModel
 from lib.scaler.nets.base_net import MlpNet
 from lib.evolution_algorithms.pso import *
 from config import *
@@ -30,19 +30,18 @@ class AnnPredictor(BaseModel):
         activation=None,
         optimizer=None,
         dropout=None,
-        learning_rate=None
+        learning_rate=None,
+        initial_state=True
     ):
 
         self.input_shape = input_shape
         self.output_shape = output_shape
-        self.model_path = model_path
-
         self.num_units = num_units
         self.activation = activation
         self.dropout = dropout
 
         self.optimizer = optimizer
-        super().__init__(model_path)
+        super().__init__(model_path, initial_state)
 
         self.batch_size = batch_size
         self.epochs = Config.EPOCHS

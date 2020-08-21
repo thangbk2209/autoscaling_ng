@@ -190,7 +190,7 @@ class Space:
             pkl.dump(optimize_loss, out, pkl.HIGHEST_PROTOCOL)
         self.gbest_model.save_model(model_path)
 
-    def optimize(self, max_iter, early_stopping=False, patience=20, step_save=5):
+    def optimize(self, max_iter, early_stopping=False, patience=20, step_save=2):
         optimize_loss = []
 
         for iteration in range(max_iter):

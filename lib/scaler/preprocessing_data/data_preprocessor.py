@@ -2,6 +2,7 @@ import numpy as np
 from pandas import read_csv
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 from config import *
 from lib.preprocess.read_data import DataReader
@@ -67,9 +68,14 @@ class DataPreprocessor:
 
     def init_data_lstm(self, sliding, scaler_method):
         print('>>> start init data for training LSTM model <<<')
-
+        # plt.plot(self.x_data)
+        # plt.plot(self.y_data)
+        # plt.show()
         data_normalizer = DataNormalizer(scaler_method)
         x_timeseries, y_time_series, self.y_scaler = data_normalizer.normalize(self.x_data, self.y_data)
+        # plt.plot(x_timeseries)
+        # plt.plot(y_time_series)
+        # plt.show()
 
         num_points = x_timeseries.shape[0]
         train_point = int(self.train_size * num_points)
@@ -124,7 +130,7 @@ class DataPreprocessor:
         # print(y_train.shape, y_test.shape)
         # print('>>> Init data for training model complete <<<')
 
-        return x_train, y_train, x_test, y_test
+        return x_train, y_train, x_test, y_test, data_normalizer
 
     def create_x_decoder_from_x_encoder(self, x_encoder, sliding_decoder):
         x_decoder = []
@@ -148,7 +154,7 @@ class DataPreprocessor:
         y_decoder = np.reshape(y_decoder, (y_decoder.shape[0], 1, y_decoder.shape[1]))
         return y_decoder
 
-    def init_data_autoencoder(self, sliding_encoder, sliding_decoder, scaler_method):
+    def init_data_bnn(self, sliding_encoder, sliding_decoder, scaler_method):
         # print('>>> start init data for training autoencoder model <<<')
 
         data_normalizer = DataNormalizer(scaler_method)
@@ -160,24 +166,17 @@ class DataPreprocessor:
         x_sample_encoder = self.create_x(x_timeseries, sliding_encoder)
 
         x_train_encoder = x_sample_encoder[0: train_point - sliding_encoder + 1]
+        y_train = y_time_series[sliding_encoder: train_point]
         x_train_encoder = np.array(x_train_encoder)
         x_train_decoder = self.create_x_decoder_from_x_encoder(x_train_encoder, sliding_decoder)
         y_train_decoder = self.create_y_decoder_from_x_encoder(x_train_encoder, sliding_decoder)
         x_train_encoder = x_train_encoder[: -1]
-        # print(x_train_encoder.shape, x_train_decoder.shape, y_train_decoder.shape)
 
         x_test_encoder = x_sample_encoder[train_point - sliding_encoder:]
+        y_test = self.y_data[train_point:]
         x_test_encoder = np.array(x_test_encoder)
-        # x_test_decoder = self.create_x_decoder_from_x_encoder(x_test_encoder)
-        # y_test_decoder = self.create_y_decoder_from_x_encoder(x_test_encoder)
-        # x_test_encoder = x_test_encoder[: -1]
 
-        # print(x_train_encoder.shape, x_train_decoder.shape, y_train_decoder.shape)
-        # print(x_test_encoder.shape, x_test_decoder.shape, y_test_decoder.shape)
-
-        # print('>>> Init data for training autoencoder model complete <<<')
-
-        return x_train_encoder, x_train_decoder, y_train_decoder, x_test_encoder
+        return x_train_encoder, x_train_decoder, y_train_decoder, y_train, x_test_encoder, y_test, data_normalizer
 
     def init_data_inf(self, sliding_encoder, sliding_inf, scaler_method):
         # print('>>> start init data for training inference model <<<')

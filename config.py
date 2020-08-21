@@ -47,22 +47,23 @@ class Config:
         }
 
         VISUALIZATION = True
-        MODEL_EXPERIMENT = 'lstm'  # lstm, ann, bnn, gan
+        MODEL_EXPERIMENT = 'bnn'  # lstm, ann, bnn, gan
 
         METAHEURISTIC_METHOD = 'pso'  # pso, whale
 
         FITNESS_TYPE = 'bayesian_autoscaling'  # validation_error, bayesian_autoscaling
-        FITNESS_NORMALIZE_METHOD = 'normalized_value'  # 'smape', 'normalized_value'
+        FITNESS_NORMALIZE_METHOD = 'smape'  # 'smape', 'normalized_value'
         VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
 
+        VERBOSE = 0
         LEARNING_RATE = 3e-4
-        EPOCHS = 1000
+        EPOCHS = 1
         EARLY_STOPPING = True
         PATIENCE = 20
         TRAIN_SIZE = 0.8
         VALID_SIZE = 0.2
-        MAX_ITER = 200
-        NUM_PARTICLE = 3
+        MAX_ITER = 5
+        NUM_PARTICLE = 1
 
         if DATA_EXPERIMENT == 'google_trace':
             INFO_SAVED_PATH = 'results/google_trace/{}/{}/{}/{}'.format(
@@ -73,6 +74,10 @@ class Config:
         else:
             INFO_SAVED_PATH = '{}/{}'.format(MODEL_EXPERIMENT, DATA_EXPERIMENT)
             RESULTS_SAVE_PATH = CORE_DATA_DIR + '/{}/'.format(INFO_SAVED_PATH)
+
+        SCALERS = ['min_max_scaler', 'standard_scaler']
+        ACTIVATIONS = ['sigmoid', 'tanh', 'relu', 'elu']
+        OPTIMIZERS = ['SGD', 'Adam', 'RMSprop', 'Adagrad']
 
         LSTM_CONFIG = {
             'sliding': [5],
@@ -88,9 +93,6 @@ class Config:
             'sliding': [3],
             'batch_size': [8],
             'num_units': [[4]],
-            'scalers': ['min_max_scaler', 'standard_scaler'],
-            'activation': ['sigmoid', 'tanh', 'relu', 'elu'],  # 'sigmoid', 'relu', 'tanh', 'elu'
-            'optimizers': ['momentum', 'adam', 'rmsprop'],  # 'momentum', 'adam', 'rmsprop'
             'domain': [
                 {'name': 'scaler', 'type': 'discrete', 'domain': [1]},
                 {'name': 'batch_size', 'type': 'discrete', 'domain': [64]},
@@ -105,20 +107,17 @@ class Config:
         }
 
         BNN_CONFIG = {
-            'scalers': ['min_max_scaler', 'standard_scaler'],  # 'min_max_scaler', 'standard_scaler'
-            'activation': ['sigmoid', 'tanh', 'relu', 'elu'],  # 'sigmoid', 'relu', 'tanh', 'elu'
-            'optimizers': ['momentum', 'adam', 'rmsprop'],  # 'momentum', 'adam', 'rmsprop'
             'cell_type': ['lstm', 'gru'],
             'sliding_encoder': [6],
-            'sliding_decoder': [4],
+            'sliding_decoder': [3],
             'sliding_inf': [2],
-            'scaler': [1, 2],
+            'scaler': [1],
             'domain': [
                 {'name': 'scaler', 'type': 'discrete', 'domain': [1, 2]},
                 {'name': 'batch_size', 'type': 'discrete', 'domain': [8, 16, 32, 64, 128]},
-                {'name': 'sliding_encoder', 'type': 'discrete', 'domain': [12, 15, 18, 21, 24]},
-                {'name': 'sliding_decoder', 'type': 'discrete', 'domain': [6, 8, 10, 12]},
-                {'name': 'sliding_inf', 'type': 'discrete', 'domain': [2, 3, 4, 5]},
+                {'name': 'sliding_encoder', 'type': 'discrete', 'domain': [6]},
+                {'name': 'sliding_decoder', 'type': 'discrete', 'domain': [4]},
+                {'name': 'sliding_inf', 'type': 'discrete', 'domain': [2]},
                 {'name': 'network_size_encoder', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
                 {'name': 'layer_size_encoder', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
                 {'name': 'network_size_inf', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
@@ -130,14 +129,14 @@ class Config:
                 {'name': 'cell_type', 'type': 'discrete', 'domain': [1, 2]}
             ],
             'domain_hyper_parameter': [
-                {'name': 'batch_size', 'type': 'discrete', 'domain': [8, 16, 32, 64, 128]},
-                {'name': 'network_size_encoder', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
+                {'name': 'batch_size', 'type': 'discrete', 'domain': [2048]},
+                {'name': 'network_size_encoder', 'type': 'discrete', 'domain': [2]},
                 {'name': 'layer_size_encoder', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
                 {'name': 'network_size_inf', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
                 {'name': 'layer_size_inf', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
                 {'name': 'dropout', 'type': 'continuous', 'domain': (0.01, 0.2)},
                 {'name': 'learning_rate', 'type': 'continuous', 'domain': (0.0001, 0.01)},
-                {'name': 'optimizer', 'type': 'discrete', 'domain': [1, 2, 3]},
+                {'name': 'optimizer', 'type': 'discrete', 'domain': [1]},
                 {'name': 'activation', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
                 {'name': 'cell_type', 'type': 'discrete', 'domain': [1, 2]}
             ]

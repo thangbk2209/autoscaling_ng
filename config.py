@@ -187,7 +187,7 @@ class Config:
         FITNESS_NORMALIZE_METHOD = 'normalized_value'  # 'smape', 'normalized_value'
         VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
 
-        VERBOSE = 0
+        VERBOSE = 2
         LEARNING_RATE = 3e-4
         MAX_ITER = 200
         NUM_PARTICLE = 50
@@ -259,10 +259,10 @@ class Config:
                 {'name': 'sliding_decoder', 'type': 'discrete', 'domain': [6, 8, 10, 12]},
                 {'name': 'sliding_inf', 'type': 'discrete', 'domain': [2, 3, 4, 5]},
                 {'name': 'network_size_encoder', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
-                {'name': 'layer_size_encoder', 'type': 'discrete', 'domain': [2, 4, 8, 16, 32, 64]},
+                {'name': 'layer_size_encoder', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
                 {'name': 'network_size_inf', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
-                {'name': 'layer_size_inf', 'type': 'discrete', 'domain': [2, 4, 8, 16, 32, 64]},
-                {'name': 'dropout', 'type': 'continuous', 'domain': (0.1, 0.5)},
+                {'name': 'layer_size_inf', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
+                {'name': 'dropout', 'type': 'continuous', 'domain': (0.05, 0.2)},
                 {'name': 'learning_rate', 'type': 'continuous', 'domain': (0.0001, 0.01)},
                 {'name': 'optimizer', 'type': 'discrete', 'domain': [1, 2, 3]},
                 {'name': 'activation', 'type': 'discrete', 'domain': [1, 2, 3, 4]},

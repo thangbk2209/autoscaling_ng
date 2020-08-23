@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import LSTM, GRU
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Input
 from tensorflow.keras import Model
@@ -54,89 +54,84 @@ class RnnAutoEncoder(UnsupervisedPretrainModel):
         self.early_stopping = Config.EARLY_STOPPING
         self.patience = Config.PATIENCE
 
+    def gen_rnn_layer(self, num_units, activation, dropout=0, return_sequences=False, return_state=False):
+        if self.cell_type.lower() == 'lstm':
+            return LSTM(
+                units=num_units,
+                activation=activation,
+                recurrent_activation=activation,
+                dropout=dropout,
+                recurrent_dropout=dropout,
+                return_sequences=return_sequences,
+                return_state=return_state
+            )
+        elif self.cell_type.lower() == 'gru':
+            return GRU(
+                units=num_units,
+                activation=activation,
+                recurrent_activation=activation,
+                dropout=dropout,
+                recurrent_dropout=dropout,
+                return_sequences=return_sequences,
+                return_state=return_state
+            )
+
     def _build_encoder(self):
         self.encoder_input_layer = Input(shape=self.encoder_input_shape)
 
         if len(self.num_units) == 1:
-            self.output, self.state_h, self.state_c = LSTM(
-                units=self.num_units[0],
-                activation=self.activation,
-                recurrent_activation=self.activation,
-                dropout=self.dropout,
-                recurrent_dropout=self.dropout,
-                return_sequences=False,
-                return_state=True
-            )(self.encoder_input_layer)
-            self.encoder_state = [self.state_h, self.state_c]
+            rnn_layer = self.gen_rnn_layer(self.num_units[0], self.activation, self.dropout, False, True)
+            if self.cell_type.lower() == 'lstm':
+                self.output, self.state_h, self.state_c = rnn_layer(self.encoder_input_layer)
+                self.encoder_state = [self.state_h, self.state_c]
+            elif self.cell_type.lower() == 'gru':
+                self.output, self.state_h = rnn_layer(self.encoder_input_layer)
+                self.encoder_state = [self.state_h]
         else:
-            self.encoder_hidden_layer = LSTM(
-                units=self.num_units[0],
-                activation=self.activation,
-                recurrent_activation=self.activation,
-                dropout=self.dropout,
-                recurrent_dropout=self.dropout,
-                return_sequences=True
-            )(self.encoder_input_layer)
+            self.encoder_state = []
+            # Layer 1
+            rnn_layer = self.gen_rnn_layer(self.num_units[0], self.activation, self.dropout, True, True)
+            if self.cell_type.lower() == 'lstm':
+                self.encoder_hidden_layer, self.state_h, self.state_c = rnn_layer(self.encoder_input_layer)
+                self.encoder_state.append([self.state_h, self.state_c])
+            elif self.cell_type.lower() == 'gru':
+                self.encoder_hidden_layer, self.state_h = rnn_layer(self.encoder_input_layer)
+                self.encoder_state.append([self.state_h])
+
+            # Layer 2 to n-1
             for i in range(1, len(self.num_units) - 1, 1):
-                self.encoder_hidden_layer = LSTM(
-                    units=self.num_units[i],
-                    activation=self.activation,
-                    recurrent_activation=self.activation,
-                    dropout=self.dropout,
-                    recurrent_dropout=self.dropout,
-                    return_sequences=True
-                )(self.encoder_hidden_layer)
-            self.output, self.state_h, self.state_c = LSTM(
-                units=self.num_units[-1],
-                activation=self.activation,
-                recurrent_activation=self.activation,
-                dropout=self.dropout,
-                recurrent_dropout=self.dropout,
-                return_sequences=False,
-                return_state=True
-            )(self.encoder_hidden_layer)
-            self.encoder_state = [self.state_h, self.state_c]
+                rnn_layer = self.gen_rnn_layer(self.num_units[i], self.activation, self.dropout, True, True)
+                if self.cell_type.lower() == 'lstm':
+                    self.encoder_hidden_layer, self.state_h, self.state_c = rnn_layer(self.encoder_input_layer)
+                    self.encoder_state.append([self.state_h, self.state_c])
+                elif self.cell_type.lower() == 'gru':
+                    self.encoder_hidden_layer, self.state_h = rnn_layer(self.encoder_input_layer)
+                    self.encoder_state.append([self.state_h])
+
+            # layer n
+            rnn_layer = self.gen_rnn_layer(self.num_units[-1], self.activation, self.dropout, False, True)
+            if self.cell_type.lower() == 'lstm':
+                self.output, self.state_h, self.state_c = rnn_layer(self.encoder_input_layer)
+                self.encoder_state.append([self.state_h, self.state_c])
+            elif self.cell_type.lower() == 'gru':
+                self.output, self.state_h = rnn_layer(self.encoder_input_layer)
+                self.encoder_state.append([self.state_h])
         self._encoder_model = Model([self.encoder_input_layer], self.state_h)
 
     def _build_decoder(self):
         self.decoder_input_layer = Input(shape=self.decoder_input_shape)
 
         if len(self.num_units) == 1:
-            self.output_decoder = LSTM(
-                units=self.num_units[0],
-                activation=self.activation,
-                recurrent_activation=self.activation,
-                dropout=self.dropout,
-                recurrent_dropout=self.dropout,
-                return_sequences=True
-            )(self.decoder_input_layer, initial_state=self.encoder_state)
+            rnn_layer = self.gen_rnn_layer(self.num_units[0], self.activation, self.dropout, True, False)
+            self.output_decoder = rnn_layer(self.decoder_input_layer, initial_state=self.encoder_state)
         else:
-            self.decoder_hidden_layer = LSTM(
-                units=self.num_units[0],
-                activation=self.activation,
-                recurrent_activation=self.activation,
-                dropout=self.dropout,
-                recurrent_dropout=self.dropout,
-                return_sequences=True
-            )(self.decoder_input_layer)
+            rnn_layer = self.gen_rnn_layer(self.num_units[0], self.activation, self.dropout, True)
+            self.decoder_hidden_layer = rnn_layer(self.decoder_input_layer, initial_state=self.encoder_state[0])
             for i in range(1, len(self.num_units) - 1, 1):
-                self.decoder_hidden_layer = LSTM(
-                    units=self.num_units[i],
-                    activation=self.activation,
-                    recurrent_activation=self.activation,
-                    dropout=self.dropout,
-                    recurrent_dropout=self.dropout,
-                    return_sequences=True
-                )(self.decoder_hidden_layer)
-            self.output_decoder = LSTM(
-                units=self.num_units[-1],
-                activation=self.activation,
-                recurrent_activation=self.activation,
-                dropout=self.dropout,
-                recurrent_dropout=self.dropout,
-                return_sequences=True
-            )(self.decoder_hidden_layer, initial_state=self.encoder_state)
-            # self.decoder_state = [self.state_h, self.state_c]
+                rnn_layer = self.gen_rnn_layer(self.num_units[i], self.activation, self.dropout, True)
+                self.decoder_hidden_layer = rnn_layer(self.decoder_hidden_layer, initial_state=self.encoder_state[i])
+            rnn_layer = self.gen_rnn_layer(self.num_units[-1], self.activation, self.dropout, True)
+            self.output_decoder = rnn_layer(self.decoder_hidden_layer, initial_state=self.encoder_state[-1])
 
         self.output = self.output_decoder[:, :, -1]
         self.model = Model([self.encoder_input_layer, self.decoder_input_layer], self.output)

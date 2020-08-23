@@ -103,18 +103,18 @@ class UnsupervisedPretrainModel(BaseModel):
         self._build_encoder()
         self._build_decoder()
 
-    def fit(self, x_encoder, x_decoder, y, validation_split=0, batch_size=1, epochs=1, verbose=2, early_stopping=True,
+    def fit(self, x_encoder, x_decoder, y, validation_split=0, batch_size=1, epochs=1, early_stopping=True,
             patience=40):
         callbacks = []
 
         if early_stopping:
             es = EarlyStopping(monitor='val_loss', patience=patience)
-            model_checkpoint = ModelCheckpoint(f'{self.model_path}.h5',
-                                               monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+            model_checkpoint = ModelCheckpoint(
+                f'{self.model_path}.h5', monitor='val_loss', mode='min', verbose=Config.VERBOSE, save_best_only=True)
             callbacks = [es, model_checkpoint]
         self.history = self.model.fit(
             [x_encoder, x_decoder], y, validation_split=validation_split, epochs=epochs, batch_size=batch_size,
-            verbose=verbose, shuffle=False, callbacks=callbacks)
+            verbose=Config.VERBOSE, shuffle=False, callbacks=callbacks)
 
         self.model.load_weights(f'{self.model_path}.h5')
         # os.remove(f'{self.model_path}.h5')

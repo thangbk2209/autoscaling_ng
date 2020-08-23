@@ -45,14 +45,12 @@ class FitnessManager:
             bnn_model, data_normalizer, x_valid_encoder, number_of_time_to_evaluate)
 
         y_valid = data_normalizer.invert_tranform(y_valid)
-        plt.plot(y_valid, label='actual')
-        plt.plot(mean_y_valid_predict, label='prediction')
-        plt.legend()
-        plt.show()
+        # plt.plot(y_valid, label='actual')
+        # plt.plot(mean_y_valid_predict, label='prediction')
+        # plt.legend()
+        # plt.show()
         evaluate_result = evaluate(mean_y_valid_predict, y_valid)
-        print('evaluate result in fitness manager: ', evaluate_result)
         if Config.FITNESS_TYPE == 'validation_error':
-            print('=== return rmse value ===')
             return mean_y_test_predict, evaluate_result['rmse']
 
         inherence_noise = evaluate_result['mse']
@@ -94,8 +92,8 @@ class FitnessManager:
             _overall_uncertainty = math.sqrt(_model_miss_uncertainty + inherence_noise)
             model_miss_uncertainty.append(_model_miss_uncertainty)
 
-            _upper_prediction = mean_y_valid_predict[i][0] + _overall_uncertainty
-            _lower_prediction = mean_y_valid_predict[i][0] - _overall_uncertainty
+            _upper_prediction = mean_y_valid_predict[i][0] + 1.96 * _overall_uncertainty
+            _lower_prediction = mean_y_valid_predict[i][0] - 1.96 * _overall_uncertainty
 
             upper_prediction.append(_upper_prediction)
             lower_prediction.append(_lower_prediction)

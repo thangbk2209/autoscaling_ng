@@ -108,9 +108,8 @@ class ModelTrainer:
         # fitness, ann_predictor = self.fit_with_ann(item)
 
         space = Space(self.fit_with_ann, Config.FITNESS_TYPE, Config.ANN_CONFIG['domain'])
-        max_iter = 20
         # early_stopping = False
-        gbest_particle = space.optimize(max_iter)
+        gbest_particle = space.optimize(Config.MAX_ITER)
         # queue = Queue()
         # for item in list(ParameterGrid(param_grid)):
             # queue.put_nowait(item)
@@ -185,9 +184,8 @@ class ModelTrainer:
         #     'cell_type': 'lstm'
         # }
         # self.fit_with_lstm(item)
-        space = Space(self.fit_with_ann, Config.FITNESS_TYPE, Config.ANN_CONFIG['domain'])
-        max_iter = 5
-        gbest_particle = space.optimize(max_iter)
+        space = Space(self.fit_with_ann, Config.FITNESS_TYPE, Config.LSTM_CONFIG['domain'])
+        gbest_particle = space.optimize(Config.MAX_ITER)
 
     def fit_with_autoencoder(self, item):
         scaler_method = item['scaler_method']

@@ -65,12 +65,6 @@ class BnnPredictor(BaseModel):
         self.output = Dense(1)(self.hidden_state)
         self.model = Model(self.encoder_input_layer, self.output)
         self.model.compile(optimizer=self.optimizer, loss='mse')
-        print(self.model.summary())
-        # print('=------------------=')
-        # print(self.encoder_state)
-        # print('=========')
-        # print(self.pretrained_encoder_net.summary())
-        # exit(0)
 
     def get_model_description(self, infor_path):
         try:

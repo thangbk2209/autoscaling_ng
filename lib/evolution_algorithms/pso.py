@@ -181,7 +181,7 @@ class Space:
         else:
             preprocess_name = self.gbest_model.preprocess_name
             saved_path = f'{Config.RESULTS_SAVE_PATH}{preprocess_name}/iter_{iteration + 1}'
-        print('start save best particle at: ', saved_path)
+
         model_path = f'{saved_path}/model/{model_name}'
         gen_folder_in_path(saved_path)
         with open('{}/optimize_infor.pkl'.format(saved_path), 'wb') as out:

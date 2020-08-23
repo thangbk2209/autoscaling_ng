@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib
-from config import *
-matplotlib.use(Config.PLT_ENV)
 import matplotlib.pyplot as plt
+
+from config import *
 
 
 class DataVisualizer:

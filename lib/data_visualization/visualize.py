@@ -5,12 +5,10 @@
   Purpose:
 """
 import matplotlib
+import matplotlib.pyplot as plt
 
 from config import *
 from lib.includes.utility import *
-
-matplotlib.use(Config.PLT_ENV)
-import matplotlib.pyplot as plt
 
 
 def visualize(data, data_experiment, metric):

@@ -100,6 +100,7 @@ class Space:
                 min_val.append(0)
                 max_val.append(len(attr['domain']) - 1)
             elif attr['type'] == 'continuous':
+                print(attr)
                 min_val.append(attr['domain'][0])
                 max_val.append(attr['domain'][1])
             range_val.append(attr['domain'])

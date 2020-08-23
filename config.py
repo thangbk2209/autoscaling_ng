@@ -221,7 +221,7 @@ class Config:
                 {'name': 'sliding', 'type': 'discrete', 'domain': [2, 3, 4, 5]},
                 {'name': 'network_size', 'type': 'discrete', 'domain': [1, 2, 3, 4, 5]},
                 {'name': 'layer_size', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
-                {'name': 'dropout', 'type': 'continuous', 'domain': (0.0)},
+                {'name': 'dropout', 'type': 'continuous', 'domain': (0.0, 0.01)},
                 {'name': 'learning_rate', 'type': 'continuous', 'domain': (0.0001, 0.01)},
                 {'name': 'optimizer', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
                 {'name': 'activation', 'type': 'discrete', 'domain': [1, 2, 3, 4]}
@@ -239,7 +239,7 @@ class Config:
                 {'name': 'sliding', 'type': 'discrete', 'domain': [2, 3, 4, 5]},
                 {'name': 'network_size', 'type': 'discrete', 'domain': [1, 2, 3, 4, 5]},
                 {'name': 'layer_size', 'type': 'discrete', 'domain': [4, 8, 16, 32, 64]},
-                {'name': 'dropout', 'type': 'continuous', 'domain': (0.0)},
+                {'name': 'dropout', 'type': 'continuous', 'domain': (0.0, 0.01)},
                 {'name': 'learning_rate', 'type': 'continuous', 'domain': (0.0001, 0.01)},
                 {'name': 'optimizer', 'type': 'discrete', 'domain': [1, 2, 3, 4]},
                 {'name': 'activation', 'type': 'discrete', 'domain': [1, 2, 3, 4]}

@@ -179,7 +179,7 @@ class Config:
         }
 
         VISUALIZATION = True
-        MODEL_EXPERIMENT = 'ann'  # lstm, ann, bnn, gan
+        MODEL_EXPERIMENT = 'bnn'  # lstm, ann, bnn, gan
 
         METAHEURISTIC_METHOD = 'pso'  # pso, whale
 

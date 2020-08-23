@@ -9,12 +9,11 @@ import random
 import os
 
 import matplotlib
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import tensorflow as tf
 
 from config import *
-matplotlib.use(Config.PLT_ENV)
-import matplotlib.pyplot as plt
 
 
 def draw_time_series(data, title, x_label, y_label, file_name):

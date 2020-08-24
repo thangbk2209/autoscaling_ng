@@ -56,11 +56,11 @@ class BaseModel:
         except Exception as ex:
             print('[ERROR] Can not plot learning curves of the model')
 
-    def fit(self, x, y, validation_split=0, batch_size=1, epochs=1, early_stopping=True, patience=40):
+    def fit(self, x, y, validation_split=0, batch_size=1, epochs=1, early_stopping=True, patience=20):
         callbacks = []
 
         if early_stopping:
-            es = EarlyStopping(monitor='val_loss', patience=patience)
+            es = EarlyStopping(monitor='val_loss', patience=Config.PATIENCE)
             model_checkpoint = ModelCheckpoint(f'{self.model_path}.h5', monitor='val_loss', mode='min',
                                                verbose=Config.VERBOSE, save_best_only=True)
             callbacks = [es, model_checkpoint]
@@ -104,11 +104,11 @@ class UnsupervisedPretrainModel(BaseModel):
         self._build_decoder()
 
     def fit(self, x_encoder, x_decoder, y, validation_split=0, batch_size=1, epochs=1, early_stopping=True,
-            patience=40):
+            patience=20):
         callbacks = []
 
         if early_stopping:
-            es = EarlyStopping(monitor='val_loss', patience=patience)
+            es = EarlyStopping(monitor='val_loss', patience=Config.PATIENCE)
             model_checkpoint = ModelCheckpoint(
                 f'{self.model_path}.h5', monitor='val_loss', mode='min', verbose=Config.VERBOSE, save_best_only=True)
             callbacks = [es, model_checkpoint]

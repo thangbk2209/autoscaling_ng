@@ -187,7 +187,7 @@ class Config:
         FITNESS_NORMALIZE_METHOD = 'normalized_value'  # 'smape', 'normalized_value'
         VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
 
-        VERBOSE = 2
+        VERBOSE = 0
         LEARNING_RATE = 3e-4
         MAX_ITER = 200
         NUM_PARTICLE = 50

@@ -190,7 +190,7 @@ class Config:
         VERBOSE = 0
         LEARNING_RATE = 3e-4
         MAX_ITER = 200
-        NUM_PARTICLE = 50
+        NUM_PARTICLE = 30
         EPOCHS = 500
         EARLY_STOPPING = True
         PATIENCE = 20

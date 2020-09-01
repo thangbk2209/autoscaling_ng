@@ -44,10 +44,7 @@ class FitnessManager:
             bnn_model, data_normalizer, x_valid_encoder, number_of_time_to_evaluate)
 
         y_valid = data_normalizer.invert_tranform(y_valid)
-        # plt.plot(y_valid, label='actual')
-        # plt.plot(mean_y_valid_predict, label='prediction')
-        # plt.legend()
-        # plt.show()
+
         evaluate_result = evaluate(mean_y_valid_predict, y_valid)
         if Config.FITNESS_TYPE == 'validation_error':
             return mean_y_test_predict, evaluate_result['rmse']
@@ -123,6 +120,22 @@ class FitnessManager:
 
         fitness = (1 - rate_real_value_in_prediction_interval + real_scale_error + validation_error) / 3
         return fitness
+
+    def evaluate_fitness_scaling(self, lstm_predictor, data_normalizer, x_valid, y_valid):
+        y_valid_prediction = lstm_predictor.predict(x_valid)
+        y_valid_prediction = data_normalizer.invert_tranform(y_valid_prediction)
+        y_valid_inversed = data_normalizer.invert_tranform(y_valid)
+        evaluate_valid_prediction = evaluate(y_valid_prediction, y_valid_inversed)
+        validation_error = evaluate_valid_prediction['rmse']  # validation error
+        y_valid_scaling = []
+        for i in range(y_valid_prediction.shape[0]):
+            _y_valid_scaling = y_valid_prediction[i][0] + 1.96 * validation_error
+            y_valid_scaling.append([_y_valid_scaling])
+
+        y_valid_scaling_normalized = data_normalizer.y_tranform(y_valid_scaling)
+        evaluate_scaling_error = evaluate(y_valid_scaling_normalized, y_valid)
+
+        return evaluate_scaling_error['rmse']
 
     def evaluate_fitness_bayesian_based_smape(
             self, bnn_model, data_normalizer, x_valid_encoder, y_valid, number_of_time_to_evaluate=50):

@@ -144,19 +144,19 @@ class Space:
 
     def set_gbest(self):
 
-        thread = []
-        for particle in self.particles:
-            _thread = threading.Thread(target=self._set_gbest, args=(particle,))
-            thread.append(_thread)
-
-        for _thread in thread:
-            _thread.start()
-
-        for _thread in thread:
-            _thread.join()
-
+        # thread = []
         # for particle in self.particles:
-            # self._set_gbest(particle)
+        #     _thread = threading.Thread(target=self._set_gbest, args=(particle,))
+        #     thread.append(_thread)
+
+        # for _thread in thread:
+        #     _thread.start()
+
+        # for _thread in thread:
+        #     _thread.join()
+
+        for particle in self.particles:
+            self._set_gbest(particle)
 
     def move_particles(self):
         for particle in self.particles:

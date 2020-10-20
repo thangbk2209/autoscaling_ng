@@ -4,7 +4,7 @@ PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 CORE_DATA_DIR = PROJECT_DIR + '/{}'.format('data')
 
 ENV_LIST = ['development', 'experiment']
-ENV_DEFAULT = 'development'
+ENV_DEFAULT = 'experiment'
 
 ENV = ENV_DEFAULT
 
@@ -52,7 +52,7 @@ class Config:
         METAHEURISTIC_METHOD = 'pso'  # pso, whale
 
         FITNESS_TYPE = 'bayesian_autoscaling'  # validation_error, bayesian_autoscaling
-        FITNESS_NORMALIZE_METHOD = 'normalized_value'  # 'smape', 'normalized_value'
+        FITNESS_NORMALIZE_METHOD = 'smape'  # 'smape', 'normalized_value'
         VALUE_OPTIMIZE = 'all_parameter'  # 'hyper_parameter', 'all_parameter'
 
         VERBOSE = 0

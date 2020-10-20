@@ -138,7 +138,7 @@ class ModelEvaluator:
             self.data_visualizer.visualize_uncertainty(y_test, y_test_predict, uncertainty, uncertainty_path)
 
     def evaluate_bnn(self, iteration, preprocess_item=None, visualize_option=True):
-
+        
         if preprocess_item is None:
             saved_path = f'{Config.RESULTS_SAVE_PATH}iter_{iteration}'
         else:
@@ -186,8 +186,9 @@ class ModelEvaluator:
         output_decoder_shape = [y_train_decoder.shape[1], y_train_decoder.shape[2]]
         output_shape = [y_train.shape[1]]
         model_path = model_path.split('data')
+        print(model_path)
 
-        model_path = CORE_DATA_DIR + model_path[1]
+        model_path = CORE_DATA_DIR + model_path[-1]
 
         bnn_model = self.model_loader.load_bnn(model_path, encoder_input_shape, output_shape)
 

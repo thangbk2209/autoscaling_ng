@@ -4,7 +4,7 @@ PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 CORE_DATA_DIR = PROJECT_DIR + '/{}'.format('data')
 
 ENV_LIST = ['development', 'experiment']
-ENV_DEFAULT = 'experiment'
+ENV_DEFAULT = 'development'
 
 ENV = ENV_DEFAULT
 

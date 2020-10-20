@@ -23,6 +23,7 @@ class BaseModel:
         pass
 
     def load_model(self, model_path=None):
+
         if model_path is None:
             self.model = load_model(self.model_path)
         else:

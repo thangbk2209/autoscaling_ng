@@ -122,18 +122,19 @@ class ModelTrainer:
         # pool.join()
         # pool.terminate()
 
-    def fit_with_lstm(self, item):
+    def fit_with_lstm(self, item, fitness_type=None):
+
         scaler_method = item['scaler']
-        sliding = item["sliding"]
-        batch_size = item["batch_size"]
+        sliding = item['sliding']
+        batch_size = item['batch_size']
 
         num_units = generate_units_size(item['network_size'], item['layer_size'])
 
-        activation = item["activation"]
-        optimizer = item["optimizer"]
+        activation = item['activation']
+        optimizer = item['optimizer']
         dropout = item['dropout']
-        learning_rate = item["learning_rate"]
-        cell_type = item['cell_type']
+        learning_rate = item['learning_rate']
+
         if type(scaler_method) == int and type(activation) == int and type(optimizer) == int:
             scaler_method = Config.SCALERS[scaler_method - 1]
             activation = Config.ACTIVATIONS[activation - 1]
@@ -160,13 +161,21 @@ class ModelTrainer:
             activation=activation,
             optimizer=optimizer,
             dropout=dropout,
-            cell_type=cell_type,
             learning_rate=learning_rate
         )
 
-        lstm_predictor.fit(x_train, y_train, validation_split=0.2, batch_size=batch_size, epochs=Config.EPOCHS)
-
-        fitness = lstm_predictor.history.history['val_loss'][-1]
+        lstm_predictor.fit(x_train, y_train, validation_split=Config.VALID_SIZE, batch_size=batch_size, epochs=Config.EPOCHS)
+        if fitness_type == 'validation_error':
+            fitness = lstm_predictor.history.history['val_loss'][-1]
+        elif fitness_type == 'bayesian_autoscaling':
+            n_train = int((1 - Config.VALID_SIZE) * len(x_train))
+            x_valid = x_train[n_train:]
+            y_valid = y_train[n_train:]
+            fitness_manager = FitnessManager()
+            fitness = fitness_manager.evaluate_fitness_scaling(
+                lstm_predictor, data_normalizer, x_valid, y_valid)
+        else:
+            print(f'[ERROR] Do not support {fitness_type}')
 
         return fitness, lstm_predictor
 
@@ -180,11 +189,10 @@ class ModelTrainer:
         #     'activation': 'tanh',
         #     'optimizer': 'adam',
         #     'dropout': 0.5,
-        #     'learning_rate': 3e-4,
-        #     'cell_type': 'lstm'
+        #     'learning_rate': 3e-4
         # }
-        # self.fit_with_lstm(item)
-        space = Space(self.fit_with_ann, Config.FITNESS_TYPE, Config.LSTM_CONFIG['domain'])
+        # self.fit_with_lstm(item, fitness_type='bayesian_autoscaling')
+        space = Space(self.fit_with_lstm, Config.FITNESS_TYPE, Config.LSTM_CONFIG['domain'])
         gbest_particle = space.optimize(Config.MAX_ITER)
 
     def fit_with_autoencoder(self, item):

@@ -16,20 +16,25 @@ class ModelEvaluator:
         self.fitness_manager = FitnessManager()
 
     def get_model_infor(self, model_path):
+        print(model_path)
         try:
             with open(model_path, 'rb') as f:
-                item = pkl.load(f)
+                gbest_value = pkl.load(f)
+                gbest_position = pkl.load(f)
+                gbest_attribute = pkl.load(f)
                 model_path = pkl.load(f)
-                optimize_loss = pkl.load(f)
-            return item, model_path, optimize_loss
+                iteration = pkl.load(f)
+                optimize_loss = pkl.load(f) 
+            return gbest_value, gbest_position, gbest_attribute, model_path, iteration, optimize_loss
         except Exception as ex:
-            print(f'[ERROR] Do not run experiment at iteration: {iteration}')
+            print(ex)
+            print(f'[ERROR] Do not run experiment at iteration')
             return
 
     def evaluate_ann(self, iteration, preprocess_item, visualize_option=True):
 
         if preprocess_item is None:
-            saved_path = f'{Config.RESULTS_SAVE_PATH}iter_{iteration}'
+            saved_path = f'{Config.RESULTS_SAVE_PATH}best_model/iter_{iteration}'
 
         item, model_path, optimize_loss = self.get_model_infor(f'{saved_path}/optimize_infor.pkl')
         optimize_process = [optimize_loss]
@@ -140,7 +145,7 @@ class ModelEvaluator:
     def evaluate_bnn(self, iteration, preprocess_item=None, visualize_option=True):
         
         if preprocess_item is None:
-            saved_path = f'{Config.RESULTS_SAVE_PATH}iter_{iteration}'
+            saved_path = f'{Config.RESULTS_SAVE_PATH}best_model/iter_{iteration}'
         else:
             scaler_method = preprocess_item['scaler']
             sliding_enc = preprocess_item['sliding_encoder']
@@ -149,7 +154,8 @@ class ModelEvaluator:
             preprocess_name = f'scaler_{scaler_method}-sli_enc_{sliding_enc}-sli_dec_{sliding_dec}'
             saved_path = f'{Config.RESULTS_SAVE_PATH}{preprocess_name}/iter_{iteration}'
 
-        item, model_path, optimize_loss = self.get_model_infor(f'{saved_path}/optimize_infor.pkl')
+        gbest_value, gbest_position, item, model_path, iteration, optimize_loss = \
+            self.get_model_infor(f'{saved_path}/optimize_infor.pkl')
 
         optimize_process = [optimize_loss]
 

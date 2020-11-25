@@ -63,7 +63,7 @@ class Config:
         TRAIN_SIZE = 0.8
         VALID_SIZE = 0.2
         MAX_ITER = 5
-        NUM_PARTICLE = 1
+        NUM_PARTICLE = 2
 
         if DATA_EXPERIMENT == 'google_trace':
             INFO_SAVED_PATH = 'results/google_trace/{}/{}/{}/{}'.format(
@@ -151,7 +151,6 @@ class Config:
         }
     elif ENV == 'experiment':
         DATA_EXPERIMENT = 'google_trace'  # grid, traffic, google_trace
-
         PLT_ENV = 'TkAgg'  # TkAgg, Agg
 
         GOOGLE_TRACE_DATA_CONFIG = {

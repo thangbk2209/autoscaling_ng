@@ -376,10 +376,10 @@ class ModelTrainer:
         pbest_particle = space.optimize(self.max_iter)
 
     def train_with_bnn(self):
+
         if Config.VALUE_OPTIMIZE == 'all_parameter':
             space = Space(self.fit_with_bnn, Config.FITNESS_TYPE, Config.BNN_CONFIG['domain'])
             pbest_particle = space.optimize(self.max_iter)
-
         elif Config.VALUE_OPTIMIZE == 'hyper_parameter':
 
             param_grid = {
@@ -400,90 +400,6 @@ class ModelTrainer:
             # pool.join()
             # pool.terminate()
 
-    # def fit_with_gan(self, item):
-    #     scaler_method = item['scaler']
-
-    #     generator_params = item['generator_params']
-    #     discriminator_params = item['discriminator_params']
-
-    #     sliding = item['sliding']
-    #     noise_shape = item['noise_shape']
-    #     optimizer_g = item['optimizer_g']
-    #     optimizer_d = item['optimizer_d']
-    #     learning_rate_g = item['learning_rate_g']
-    #     learning_rate_d = item['learning_rate_d']
-    #     loss_type = item['loss_type']
-    #     batch_size = item['batch_size']
-    #     num_train_d = item['num_train_d']
-
-    #     # num_units = [4, 2]
-    #     # cell_type = item['cell_type']
-
-    #     if type(scaler_method) == int and type(activation) == int and type(optimizer) == int:
-    #         scaler_method = Config.ANN_CONFIG['scalers'][scaler_method - 1]
-    #         activation = Config.ANN_CONFIG['activation'][activation - 1]
-    #         optimizer = Config.ANN_CONFIG['optimizers'][optimizer - 1]
-
-    #     x_train, y_train, x_test, y_test = \
-    #         self.data_preprocessor.init_data_lstm(sliding, scaler_method)
-
-    #     generator_net = GeneratorNet(generator_params, 'generator')
-    #     discriminator_net = DiscriminatorNet(discriminator_params, 'discriminator')
-
-    #     input_shape = [x_train.shape[1], x_train.shape[2]]
-    #     output_shape = [y_train.shape[1]]
-    #     model_name = create_name(input_shape=input_shape, output_shape=output_shape)
-    #     model_path = f'{self.results_save_path}/{model_name}'
-
-    #     model = GanPredictor(
-    #         generator=generator_net,
-    #         discriminator=discriminator_net,
-    #         model_dir=model_path,
-    #         input_shape=input_shape,
-    #         output_shape=output_shape,
-    #         noise_shape=noise_shape,
-    #         loss_type=loss_type,
-    #         optimizer_g=optimizer_g,
-    #         optimizer_d=optimizer_d,
-    #         num_train_d=num_train_d
-    #     )
-
-    #     model.fit(x_train, y_train, validation_split=0, batch_size=batch_size, epochs=Config.EPOCHS)
-    #     model.close_session()
-
-    # def train_with_gan(self):
-
-    #     item = {
-    #         'scaler': 'min_max_scaler',
-    #         'generator_params': {
-    #             'embedding_num_units': [4, 2],
-    #             'mlp_num_units': [4, 2],
-    #             'activation': 'sigmoid',
-    #             'dropout': 0,
-    #             'cell_type': 'lstm'
-    #         },
-    #         'discriminator_params': {
-    #             'embedding_num_units': [4, 2],
-    #             'mlp_num_units': [4, 2],
-    #             'activation': 'sigmoid',
-    #             'dropout': 0,
-    #             'cell_type': 'lstm'
-    #         },
-    #         'activation': 'sigmoid',
-    #         'sliding': 5,
-    #         'noise_shape': [4],
-    #         'optimizer_g': 'rmsprop',
-    #         'optimizer_d': 'rmsprop',
-    #         'learning_rate_g': 0.001,
-    #         'learning_rate_d': 0.001,
-    #         'num_train_d': 2,
-    #         'loss_type': 'loss_gan',
-    #         'batch_size': 8,
-    #         'model_dir': 'logs/ann_gan'
-    #     }
-
-    #     self.fit_with_gan(item)
-
     def train(self):
         print('[3] >>> Start choosing model and experiment')
         if Config.MODEL_EXPERIMENT.lower() == 'ann':
@@ -493,7 +409,6 @@ class ModelTrainer:
         elif Config.MODEL_EXPERIMENT.lower() == 'bnn':
             self.train_with_bnn()
         elif Config.MODEL_EXPERIMENT.lower() == 'gan':
-            # self.train_with_gan()
             pass
         else:
             print('>>> Can not experiment your method <<<')

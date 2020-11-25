@@ -32,7 +32,6 @@ def init_model():
     model_trainer.train()
     print('[1] >>> Init model complete')
 
-
 def evaluate_model():
 
     try:

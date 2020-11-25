@@ -1,5 +1,5 @@
 
-from lib.scaler.models.ann_model import AnnPredictor
+# from lib.scaler.models.ann_model import AnnPredictor
 from lib.scaler.models.lstm_model import LstmPredictor
 from lib.scaler.models.bnn.autoencoder import RnnAutoEncoder
 from lib.scaler.models.bnn.bnn_model import BnnPredictor
